@@ -1,0 +1,27 @@
+{
+  "version": "1.0.0-*",
+  "description": "RT.Comb Unit Tests",
+  "authors": [ "Richard S. Tallent" ],
+  "tags": [ "" ],
+  "projectUrl": "",
+  "licenseUrl": "http://www.apache.org/licenses/LICENSE-2.0",
+
+  "dependencies": {
+    "Microsoft.CSharp": "4.0.1-beta-23409",
+    "System.Collections": "4.0.11-beta-23409",
+    "System.Linq": "4.0.1-beta-23409",
+    "System.Threading": "4.0.11-beta-23409",
+    "RT.Comb": "1.0.0-*",
+    "xunit": "2.1.0"
+  },
+
+  "frameworks": {
+    "dotnet": { }
+  },
+
+  "commands": {
+    "test": "xunit.runner.visualstudio"
+  }
+
+
+}
