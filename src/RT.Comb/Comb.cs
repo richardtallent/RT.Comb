@@ -18,8 +18,9 @@ using System;
 namespace RT.CombUtils {
 
 	/// <summary>
-	/// A COMB is a GUID where the 6 most significant bytes are replaced with an SQL Server datetime value. The date portion
-	/// of the datetime structure is truncated from four bytes to two, limiting the date range to 1900-01-01 to 2079-06-06.
+	/// A COMB is a GUID where 6 bytes are replaced with an SQL Server datetime value in a way that
+	/// results in GUIDs that are in date/time order in SQL Server. The date portion of the datetime
+	/// structure is truncated from four bytes to two, limiting the date range to 1900-01-01 to 2079-06-06.
 	/// </summary>
 	public static class Comb {
 
