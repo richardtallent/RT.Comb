@@ -4,7 +4,7 @@
   "authors": [ "Richard S. Tallent" ],
   "tags": [ "COMB", "GUID", "MSSQL" ],
   "projectUrl": "",
-  "licenseUrl": "http://www.apache.org/licenses/LICENSE-2.0",
+  "licenseUrl": "https://opensource.org/licenses/MIT",
 
   "frameworks": {
     "dnx451": { },
