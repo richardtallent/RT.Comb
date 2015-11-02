@@ -1,19 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
+# Visual Studio Express 14 for Web
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{3CF062B7-AE30-4C30-9027-417EAC51CE53}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5DB0E9F1-769B-400D-B19F-B4752EF3C75B}"
-	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
-		README.md = README.md
-	EndProjectSection
-EndProject
-Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "RT.Comb", "src\RT.Comb\RT.Comb.xproj", "{CC8E5DDB-0D60-4270-A3B6-383D5C615586}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{E9B34280-275B-43A1-BB4B-25CF12A21AB0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RT.Comb", "RT.Comb\RT.Comb.csproj", "{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,15 +11,12 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CC8E5DDB-0D60-4270-A3B6-383D5C615586}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CC8E5DDB-0D60-4270-A3B6-383D5C615586}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CC8E5DDB-0D60-4270-A3B6-383D5C615586}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CC8E5DDB-0D60-4270-A3B6-383D5C615586}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{CC8E5DDB-0D60-4270-A3B6-383D5C615586} = {3CF062B7-AE30-4C30-9027-417EAC51CE53}
 	EndGlobalSection
 EndGlobal
