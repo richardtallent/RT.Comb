@@ -21,81 +21,108 @@ namespace RT.CombUtils {
 	/// A COMB is a GUID where 6 bytes are replaced with an SQL Server datetime value in a way that
 	/// results in GUIDs that are in date/time order in SQL Server. The date portion of the datetime
 	/// structure is truncated from four bytes to two, limiting the date range to 1900-01-01 to 2079-06-06.
+	/// There are several ways of injecting this value into the GUID, depending on the database platform.
 	/// </summary>
+
 	public static class Comb {
+
+		// SQL Server variant
+
+		public static DateTime DecodeCombSqlOrder(Guid Value) {
+			var gbytes = Value.ToByteArray();
+			var dtbytes = new byte[6];
+			Array.Copy(gbytes, 8, dtbytes, 0, 6);
+			return BytesToDateTime(dtbytes);
+		}
+
+		public static Guid EncodeCombSqlOrder(Guid Value) {
+			return EncodeCombSqlOrder(Value, DateTime.UtcNow);
+		}
+		
+		public static Guid EncodeCombSqlOrder(Guid Value, DateTime Timestamp) {
+			var gbytes = Value.ToByteArray();
+			var dtbytes = DateTimeToBytes(Timestamp);
+			Array.Copy(dtbytes, 0, gbytes, 10, 6);
+			return new Guid(gbytes);
+		}
+
+		// Byte order variant (PostgreSql, others)
+
+		public static DateTime DecodeCombByteOrder(Guid Value) {
+			var gbytes = Value.ToByteArray();
+			var dtbytes = new byte[6];
+			Array.Copy(gbytes, 0, dtbytes, 0, 6);
+			// Move nybbles 5-8 to 6-9, overwriting the existing 9 (version "4")
+			dtbytes[4] = (byte)((byte)(dtbytes[3] << 4) | (byte)(dtbytes[4] & 0x0F));
+			dtbytes[3] = (byte)((byte)(dtbytes[2] << 4) | (byte)(dtbytes[3] >> 4));
+			dtbytes[2] = (byte)(dtbytes[2] >> 4);
+			return BytesToDateTime(dtbytes);
+		}
+
+		public static Guid EncodeCombByteOrder(Guid Value) {
+			return EncodeCombByteOrder(Value, DateTime.UtcNow);
+		}
+
+		public static Guid EncodeCombByteOrder(Guid Value, DateTime Timestamp) {
+			var dtbytes = DateTimeToBytes(Timestamp);
+			// Nybble 6-9 move left to 5-8
+			// Nybble 9 is set to "4" (the version)
+			dtbytes[2] = (byte)((byte)(dtbytes[2] << 4) | (byte)(dtbytes[3] >> 4));
+			dtbytes[3] = (byte)((byte)(dtbytes[3] << 4) | (byte)(dtbytes[4] >> 4));
+			dtbytes[4] = (byte)(0x40 | (byte)(dtbytes[4] & 0x0F));
+			// Overwrite the first six bytes
+			var gbytes = Value.ToByteArray();
+			Array.Copy(dtbytes, 0, gbytes, 0, 6);
+			return new Guid(gbytes);
+		}
+
+		// Reference values and Utilities
 
 		private static readonly DateTime MinCombDate = new DateTime(1900, 1, 1);
 		private static readonly DateTime MaxCombDate = MinCombDate.AddDays(ushort.MaxValue);
 		private static readonly double TicksPerDay = 86400d * 300d;
 		private static readonly double TicksPerMillisecond = 3d / 10d;
-		private const int DayByteIndex = 10;        // Byte position where day value starts
-		private const int TickByteIndex = 12;       // Byte position where time value starts
 
-		/// <summary>
-		/// Generates a COMB with a random Guid and the current UTC datetime. This is probably the method that will be used the most often.
-		/// </summary>
-		public static Guid NewComb() {
-			return NewComb(Guid.NewGuid(), DateTime.UtcNow);
-		}
-
-		/// <summary>
-		/// Combine a specified Guid and DateTime value.
-		/// </summary>
-		public static Guid NewComb(Guid guid, DateTime embedDateTime) {
-			ThrowOnInvalidCombDate(embedDateTime);
+		private static byte[] DateTimeToBytes(DateTime value) {
+			if (value < MinCombDate) throw new ArgumentException($"COMB values only support dates on or after {MinCombDate}");
+			if (value > MaxCombDate) throw new ArgumentException($"COMB values only support dates through {MaxCombDate}");
 			// Convert the time to 300ths of a second. SQL Server uses float math for this before converting to an integer, so this does as well
 			// to avoid rounding errors. This is confirmed in MSSQL by SELECT CONVERT(varchar, CAST(CAST(2 as binary(8)) AS datetime), 121),
 			// which would return .006 if it were integer math, but it returns .007.
-			var ticks = (int)(embedDateTime.TimeOfDay.TotalMilliseconds * TicksPerMillisecond); // Convert to nearest 300ths of a second
+			var ticks = (int)(value.TimeOfDay.TotalMilliseconds * TicksPerMillisecond);
+			var days = (ushort)(value - MinCombDate).TotalDays;
 			var tickBytes = BitConverter.GetBytes(ticks);
-			var days = (ushort)(embedDateTime - MinCombDate).TotalDays;
 			var dayBytes = BitConverter.GetBytes(days);
 			if(BitConverter.IsLittleEndian) {
-				// GUID uses Big Endian, so if the platform uses Little Endian, reverse the byte order.
+				// x86 platforms store the LEAST significant bytes first, we want the opposite for our arrays
 				Array.Reverse(dayBytes);
 				Array.Reverse(tickBytes);
 			}
-			var result = guid.ToByteArray();
-			Array.Copy(dayBytes, 0, result, DayByteIndex, 2);
-			Array.Copy(tickBytes, 0, result, TickByteIndex, 4);
-			return new Guid(result);
+			var result = new Byte[6];
+			Array.Copy(dayBytes, 0, result, 0, 2);
+			Array.Copy(tickBytes, 0, result, 2, 4);
+			return result;
 		}
-
-		/// <summary>
-		/// Extracts the DateTime from an existing COMB. May be accessed as an extension on Guid.
-		/// </summary>
-		public static DateTime ExtractCombDateTime(this Guid value, bool throwOnFail = true) {
-			var guidBytes = value.ToByteArray();
+		
+		private static DateTime BytesToDateTime(byte[] value) {
+			// Attempt to convert the first 6 bytes.
 			var dayBytes = new byte[2];                     // Empty ushort
 			var tickBytes = new byte[4];                    // Empty int
-			Array.Copy(guidBytes, DayByteIndex, dayBytes, 0, 2);
-			Array.Copy(guidBytes, TickByteIndex, tickBytes, 0, 4);
+			Array.Copy(value, 0, dayBytes, 0, 2);
+			Array.Copy(value, 2, tickBytes, 0, 4);
 			if(BitConverter.IsLittleEndian) {
-				// GUID uses Big Endian, so if the platform uses Little Endian, reverse the byte order.
+				// COMBs store the MOST significant bytes first, we need the opposite to convert back to x86-form int/ushort
 				Array.Reverse(dayBytes);
 				Array.Reverse(tickBytes);
 			}
 			var days = BitConverter.ToUInt16(dayBytes, 0);
-			var ticks = (double)BitConverter.ToInt32(tickBytes, 0);
+			var ticks = BitConverter.ToInt32(tickBytes, 0);
 			if(ticks < 0f) {
-				if(throwOnFail) {
-					throw new ArgumentException("A negative time component is unexpected.");
-				} else {
-					ticks = 0f;
-				}
+				throw new ArgumentException("Not a COMB, time component is negative.");
 			} else if(ticks > TicksPerDay) {
-				if(throwOnFail) {
-					throw new ArgumentException("A time component exceeding 24 hours is unexpected.");
-				} else {
-					ticks = 0f;
-				}
+				throw new ArgumentException("Not a COMB, time component exceeds 24 hours.");
 			}
-			return MinCombDate.AddDays(days).AddMilliseconds(ticks / TicksPerMillisecond);
-		}
-
-		public static void ThrowOnInvalidCombDate(DateTime value) {
-			if (value < MinCombDate) throw new ArgumentException($"COMB values only support dates on or after {MinCombDate}");
-			if (value > MaxCombDate) throw new ArgumentException($"COMB values only support dates through {MaxCombDate}");
+			return MinCombDate.AddDays(days).AddMilliseconds((double)ticks / TicksPerMillisecond);
 		}
 
 	}

@@ -34,7 +34,6 @@ namespace RT.CombSql {
 		}
 
 		public static string GetCombSql(Guid guidBase, DateTime dateTimeStamp) {
-			Comb.ThrowOnInvalidCombDate(dateTimeStamp);
 			return GetCombSql(FormatLiteralSql(guidBase), FormatLiteralSql(dateTimeStamp));
 		}
 
@@ -43,7 +42,6 @@ namespace RT.CombSql {
 		}
 
 		public static string GetCombSql(DateTime value) {
-			Comb.ThrowOnInvalidCombDate(value);
 			return GetCombSql(DefaultGuidSql, FormatLiteralSql(value));
 		}
 

@@ -42,7 +42,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Comb.cs" />
-    <Compile Include="CombExtensions.cs" />
     <Compile Include="CombSql.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
