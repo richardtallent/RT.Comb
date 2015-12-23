@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Express 14 for Web
-VisualStudioVersion = 14.0.23107.0
+# Visual Studio 14
+VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RT.Comb", "RT.Comb\RT.Comb.csproj", "{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}"
 EndProject
@@ -9,6 +9,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RT.CombTests", "RT.Comb.Tests\RT.CombTests.csproj", "{9EC60E49-F042-48A3-AF2F-9867857CB29C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,6 +22,10 @@ Global
 		{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9EC60E49-F042-48A3-AF2F-9867857CB29C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9EC60E49-F042-48A3-AF2F-9867857CB29C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9EC60E49-F042-48A3-AF2F-9867857CB29C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9EC60E49-F042-48A3-AF2F-9867857CB29C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

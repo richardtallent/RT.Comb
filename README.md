@@ -3,13 +3,13 @@ Purpose
 =======
 Invented by Jimmy Nilsson and first described in an article for InformIT in 2002, a COMB is a GUID with an embedded date/time value, making the values sequential over time.
 
-This library is designed to create "COMB" Guid values in C#, and to be able to extract the Date/Time value from an existing COMB value.
+This library is designed to create "COMB" Guid values in C#, and to be able to extract the Date/Time value from an existing COMB value. I've found some random code here and there that purports to do something similar, but it either didn't support both variants of COMB (more on this later) or it was not independent enough to be grafted into my code.
 
 Background
 ==========
-When GUIDs (`uniqueidentifier` values in MSSQL parlance, `UUID` in PostgreSql) are part of a database index, the randomness of the values can result in reduced performance, as insertions of new data result in page splits. In SQL Server 2005, Microsoft provided the `NEWSEQUENTIALID()` function to alleviate this issue, but despite the name, generated GUID values from that function are still not guaranteed to be sequential over time.
+When GUIDs (`uniqueidentifier` values in MSSQL parlance, `UUID` in PostgreSql) are part of a database index, the randomness of new values can result in reduced performance, as insertions can fragment the index (or, for a clustered index, the table). In SQL Server 2005, Microsoft provided the `NEWSEQUENTIALID()` function to alleviate this issue, but despite the name, generated GUID values from that function are still not guaranteed to be sequential over time, nor do multiple instances of MSSQL produce values that would be sequential in relationship to one another.
 
-The COMB method, however, takes advantage of the database's sort ordering for GUID values and replaces the bytes that are sorted first with a date/time value, so values generated at the same time will always be generated in order or very close to it, regardless of regardless of server reboots or values generated on different machines (to the degree, of course, that the system clocks are synchronized).
+The COMB method, however, takes advantage of the database's native sort ordering for GUID values and replaces the bytes that are sorted first with a date/time value, so values generated at the same time will always be generated in order or very close to it, regardless of regardless of server reboots or values generated on different machines (to the degree, of course, that the system clocks are synchronized).
 
 As a side benefit, the COMB's sequential portion has the semantic value of being the date and time of insert, which can be useful from time to time.
 
@@ -28,11 +28,11 @@ Standard GUIDs are 128-bit (16-byte) values, wherein most of those bits hold a r
     version  ^
     variant            ^
 
-Each character represents a nybble, and each byte is shown with the most significant nybble first, as usual (i.e., "0F" is 16, "F0" is 128).
+Each character represents a nybble, and each byte is shown with the most significant nybble first, as usual (e.g., "0F" is 16, "F0" is 128).
 
-The most significant 2-3 bits of nybble 17 are not random -- they store a "variant" value. For standard GUIDs, the first two bits are "10", the other two are random, and the 5th nybble stores the "version" number (usually "4").
+The most significant 2-3 bits of nybble 17 are not random -- they store a "variant" value. For standard GUIDs, the first two bits are "10", the other two bits are random, and the 5th nybble stores the "version" number (usually "4").
 
-PostgreSQL store and sort (and tools like pgAdmin show) `UUID` values as if they were a 16-byte array, left to right, i.e.:
+PostgreSQL stores and sorts (and tools like pgAdmin show) `UUID` values as if they were a 16-byte array, left to right, i.e.:
 
     0123456789ABCDEF
 
@@ -63,7 +63,7 @@ The `datetime` type in MSSQL is an 8-byte structure. The first four bytes are a 
 
 The remaining four bytes represent the time as the number of 300ths of a second since midnight. Since a day is always 24 hours, this integer never exceeds 25 bits of data, and since only whole numbers are supported, the sign is unused, so you can think of this as unsigned.
 
-For the purposes of a COMB, we use all four bytes of the time, but only two bytes of the date portion. This means our date has no sign bit and has a maximum value of 65535. This limits our date range to January 1, 1900 through June 6, 2979. This will do nicely for a lifetime of timestamps.
+For the purposes of a COMB, we use all four bytes of the time, but only two bytes of the date. This means our date has no sign bit and has a maximum value of 65535. This limits our date range to January 1, 1900 through June 5, 2079. This will do nicely for a lifetime of timestamps.
 
 We want to overwrite the bytes that will be sorted *first*, so our GUIDs are always in date/time order. This is why understanding the byte order and sorting is so important.
 
@@ -71,9 +71,10 @@ For MSSQL, the last six bytes are sorted first, left to right, so we overwrite o
 
     00112233-4455-6677-8899-AABBCCDDEEFF
     xxxxxxxx 4xxx xxxx Vxxx DDDD0TTTTTTT
-                       		554433221100
-    random-ish				date    time
-	V = b100x
+                            554433221100
+	                        date    time
+	V = b10xx
+	x = random
 
 (Note that I've marked the most significant nybble of the time above as "0" rather than "T", since its value will always be 0.)
 
@@ -83,33 +84,42 @@ Here, we can take advantage of the fact that our time value only uses 28 of its 
 
     DDDDTTTT-4TTT-xxxx-Vxxx-xxxxxxxxxxxx
     00112334  455
-    date      time            random-ish
+    date      time
 	V = b100x
+	x = random
 
 Note above that byte position 2 is only mentioned once -- we only represent its least significant nybble.
 
 When PostgreSQL `UUID` values are read into .NET applications as `Guid` values, the string representation and default sort will still be different from the byte order.
 
+Converting To/From COMB values in T-SQL
+=======================================
+
+Create a new `uniqueidentifier` value with the current timestamp:
+
+    CAST(CAST(NEWID() AS binary(10)) + CAST(GETUTCDATE() AS binary(6)) AS uniqueidentifier)
+
+Extract the `datetime` value from a COMB `uniqueidentifier`:
+
+	CAST(SUBSTRING(CAST(0 AS binary(2)) + CAST(value AS binary(16), 10, 6) AS datetime)
+
+The overhead for both of these in MSSQL is minimal.
+
 Implementation/Usage
 ====================
-After playing with both classes and structs, I decided that the best way to implement both of these variations was through static utility classes that "encode" and "decode" the DateTime in a given GUID.
+- A static class provides the basic functions.
+- If you prefer instance methods, a public interface is provided and a default implementation.
+- Another class, RT.CombExtensions.Extensions, provides optional extension methods for both variants.
 
-Helper methods are also provided to generate sample T-SQL to create COMB values in MSSQL. These were only included for testing purposes.
+Some minor features require C# 6. If this is a major stumbling block, I can move back to code that can target earlier version.
 
-Some minor features require C# 6. If this is a major stumbling block, I can move back to code that can target earlier versions of .NET.
-
-When generating values, note that on Windows platforms, while a COMB's time resolution is around 3md, the Windows system timer only has a resolution of around 15ms.
-
-Extension methods seemed like they would have the potential to create confusion since they return a new Guid rather than modifying "this," so I didn't go down that road.
+When generating values, note that on Windows platforms, while a COMB's time resolution is around 3ms, the Windows system timer only has a resolution of around 15ms.
 
 How To Contribute
 =================
 Some missing pieces:
 
-1. I'm having trouble adding an Xunit project to create unit tests, so I could use some help on that front.
-2. The code currently only works with Guid values, I'd like to have it work with `SqlGuid` values as well.
-3. It would be nice to have a custom `IComparer` method that sorts `Guid` values the same way as `SqlGuid`, and another that would compare them in byte order for COMBs generated for PostgreSQL.
-4. It might be nice to have an alternate implementation that uses `GetSystemTimeAsFileTime()` to provide time resolution that is equivalent with MSSQL's `DATETIME2` type and `SYSUTCDATETIME` function. Perhaps call it COMB2?
+- It would be nice to have a custom `IComparer` method that sorts `Guid` values the same way as `SqlGuid`, and another that would compare them in byte order for COMBs generated for PostgreSQL.
 
 I'm using Visual Studio 2015 Community Edition (over VirtualBox on my home Mac), targeted to stable .NET versions, so please keep contributions compatible with that configuration. Also, I do use tabs and I like compact code (minimal line breaks). I know I'm in the minority on this coding style, but please don't send a pull request just to "fix" my formatting.
 
@@ -140,15 +150,8 @@ License (MIT "Expat")
 =====================
 Copyright 2015 Richard S. Tallent, II
 
-
-
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-
 
 The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
