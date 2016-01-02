@@ -46,6 +46,9 @@
     <Compile Include="RT.CombVariant.cs" />
     <Compile Include="RT.ICombProvider.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>

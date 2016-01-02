@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using RT.CombUtils;
 
 namespace RT.CombTests {
 

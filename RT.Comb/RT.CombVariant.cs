@@ -14,7 +14,7 @@
 	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-namespace RT {
+namespace RT.CombUtils {
 
 	public enum CombVariant {
 		// This variant should be used with MSSQL, since it sorts GUID values in a novel order.
