@@ -91,7 +91,8 @@ namespace RT {
 			var tickBytes = BitConverter.GetBytes(ticks);
 			var dayBytes = BitConverter.GetBytes(days);
 
-			if(BitConverter.IsLittleEndian) {
+			if(BitConverter.IsLittleEndian)
+			{
 				// x86 platforms store the LEAST significant bytes first, we want the opposite for our arrays
 				Array.Reverse(dayBytes);
 				Array.Reverse(tickBytes);
@@ -110,7 +111,8 @@ namespace RT {
 			Array.Copy(value, 0, dayBytes, 0, 2);
 			Array.Copy(value, 2, tickBytes, 0, 4);
 
-			if(BitConverter.IsLittleEndian) {
+			if(BitConverter.IsLittleEndian)
+			{
 				// COMBs store the MOST significant bytes first, we need the opposite to convert back to x86-form int/ushort
 				Array.Reverse(dayBytes);
 				Array.Reverse(tickBytes);
