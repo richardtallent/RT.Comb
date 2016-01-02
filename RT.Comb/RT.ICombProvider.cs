@@ -15,13 +15,13 @@
 	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-namespace RT {
+namespace RT.CombUtils {
 
 	public interface ICombProvider {
 
 		CombVariant Variant { get; set; }
 
-		Guid New();
+		Guid Create();
 
 		DateTime FromComb(Guid value);
 

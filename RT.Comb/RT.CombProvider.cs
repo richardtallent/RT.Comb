@@ -15,13 +15,13 @@
 	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-namespace RT {
+namespace RT.CombUtils {
 
 	public class CombProvider : ICombProvider {
 
 		public CombVariant Variant { get; set; } = CombVariant.SqlServer;
 
-		public Guid New() => Comb.New(Variant);
+		public Guid Create() => Comb.Create(Variant);
 
 		public DateTime FromComb(Guid value) => Comb.FromComb(value, Variant);
 

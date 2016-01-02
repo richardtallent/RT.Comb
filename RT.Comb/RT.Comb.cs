@@ -1,4 +1,5 @@
 ﻿using System;
+using static System.FormattableString;
 /*
 	Copyright 2015 Richard S. Tallent, II
 
@@ -15,7 +16,8 @@
 	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-namespace RT {
+[assembly: CLSCompliant(true)]
+namespace RT.CombUtils {
 
 	/// <summary>
 	/// Utilities for decoding and encoding the date in a Comb Guid.
@@ -23,17 +25,17 @@ namespace RT {
 	public static class Comb {
 
 		// Various constants
-		private static readonly int StartIndexSqlServer = 10;
-		private static readonly int CombDateSize = 6;
+		private const int StartIndexSqlServer = 10;
+		private const int CombDateSize = 6;
 		private static readonly DateTime MinCombDate = new DateTime(1900, 1, 1);
 		private static readonly DateTime MaxCombDate = MinCombDate.AddDays(ushort.MaxValue);
-		private static readonly double TicksPerDay = 86400d * 300d;
-		private static readonly double TicksPerMillisecond = 3d / 10d;
+		private const double TicksPerDay = 86400d * 300d;
+		private const double TicksPerMillisecond = 3d / 10d;
 
 		/// <summary>
 		/// Return a new GUID COMB of the specified variant.
 		/// </summary>
-		public static Guid New(CombVariant variant) {
+		public static Guid Create(CombVariant variant) {
 			return ToComb(Guid.NewGuid(), DateTime.UtcNow, variant);
 		}
 
@@ -60,9 +62,9 @@ namespace RT {
 		/// <summary>
 		/// Encode a given DateTime value in the given Guid value.
 		/// </summary>
-		public static Guid ToComb(Guid value, DateTime datetime, CombVariant variant) {
+		public static Guid ToComb(Guid value, DateTime timestamp, CombVariant variant) {
 			var bytes = value.ToByteArray();
-			var dtbytes = DateTimeToBytes(datetime);
+			var dtbytes = DateTimeToBytes(timestamp);
 
 			if(variant == CombVariant.SqlServer) {
 				Array.Copy(dtbytes, 0, bytes, StartIndexSqlServer, CombDateSize);
@@ -80,14 +82,14 @@ namespace RT {
 
 		// Private methods
 
-		private static byte[] DateTimeToBytes(DateTime value) {
-			if (value < MinCombDate) throw new ArgumentException($"COMB values only support dates on or after {MinCombDate}");
-			if (value > MaxCombDate) throw new ArgumentException($"COMB values only support dates through {MaxCombDate}");
+		private static byte[] DateTimeToBytes(DateTime timestamp) {
+			if (timestamp < MinCombDate) throw new ArgumentException(Invariant($"COMB values only support dates on or after {MinCombDate}"));
+			if (timestamp > MaxCombDate) throw new ArgumentException(Invariant($"COMB values only support dates through {MaxCombDate}"));
 			// Convert the time to 300ths of a second. SQL Server uses float math for this before converting to an integer, so this does as well
 			// to avoid rounding errors. This is confirmed in MSSQL by SELECT CONVERT(varchar, CAST(CAST(2 as binary(8)) AS datetime), 121),
 			// which would return .006 if it were integer math, but it returns .007.
-			var ticks = (int)(value.TimeOfDay.TotalMilliseconds * TicksPerMillisecond);
-			var days = (ushort)(value - MinCombDate).TotalDays;
+			var ticks = (int)(timestamp.TimeOfDay.TotalMilliseconds * TicksPerMillisecond);
+			var days = (ushort)(timestamp - MinCombDate).TotalDays;
 			var tickBytes = BitConverter.GetBytes(ticks);
 			var dayBytes = BitConverter.GetBytes(days);
 
