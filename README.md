@@ -5,11 +5,23 @@ Invented by Jimmy Nilsson and first described in an article for InformIT in 2002
 
 This library is designed to create "COMB" Guid values in C#, and to be able to extract the Date/Time value from an existing COMB value. I've found some random code here and there that purports to do something similar, but it either didn't support both variants of COMB (more on this later) or it was not independent enough to be grafted into my code.
 
+Using this Library
+====================
+- A static class provides the basic functions.
+- If you prefer instance methods, a public interface is provided and a default implementation.
+- Another class, RT.CombExtensions.Extensions, provides optional extension methods for both variants.
+
+When generating values, note that on Windows platforms, while a COMB's time resolution is around 3ms, the Windows system timer only has a resolution of around 15ms.
+
+A NuGet package is available:
+
+https://www.nuget.org/packages/RT.Comb/1.2.0
+
 Background
 ==========
 When GUIDs (`uniqueidentifier` values in MSSQL parlance, `UUID` in PostgreSql) are part of a database index, the randomness of new values can result in reduced performance, as insertions can fragment the index (or, for a clustered index, the table). In SQL Server 2005, Microsoft provided the `NEWSEQUENTIALID()` function to alleviate this issue, but despite the name, generated GUID values from that function are still not guaranteed to be sequential over time, nor do multiple instances of MSSQL produce values that would be sequential in relationship to one another.
 
-The COMB method, however, takes advantage of the database's native sort ordering for GUID values and replaces the bytes that are sorted first with a date/time value, so values generated at the same time will always be generated in order or very close to it, regardless of regardless of server reboots or values generated on different machines (to the degree, of course, that the system clocks are synchronized).
+The COMB method, however, takes advantage of the database's native sort ordering for GUID values and replaces the bytes that are sorted first with a date/time value, so values generated at the same time will always be generated in a *nearly* sequential order, regardless of server reboots or values generated on different machines (to the degree, of course, that the system clocks are synchronized).
 
 As a side benefit, the COMB's sequential portion has the semantic value of being the date and time of insert, which can be useful from time to time.
 
@@ -105,16 +117,6 @@ Extract the `datetime` value from a COMB `uniqueidentifier`:
 
 The overhead for both of these in MSSQL is minimal.
 
-Implementation/Usage
-====================
-- A static class provides the basic functions.
-- If you prefer instance methods, a public interface is provided and a default implementation.
-- Another class, RT.CombExtensions.Extensions, provides optional extension methods for both variants.
-
-Some minor features require C# 6. If this is a major stumbling block, I can move back to code that can target earlier version.
-
-When generating values, note that on Windows platforms, while a COMB's time resolution is around 3ms, the Windows system timer only has a resolution of around 15ms.
-
 How To Contribute
 =================
 Some missing pieces:
@@ -133,9 +135,9 @@ Security and Performance
 
 (4) Don't use this with MySQL if you plan to store GUIDs as varchar(36) -- performance will be terrible.
 
-(5) Test, test, test. Don't assume that a 128-bit key will be significantly slower for you than a 32-bit traditional int key. Don't assume it will be roughly the same. The relative size of your tables (and especially of your indexed columns) compared to your primary key column will have a big impact on the overall database size and performance hit. I use COMB values frequently in moderate-sized databases without any issues, but YMMV.
+(5) Test, test, test. Don't assume that a 128-bit key will be significantly slower for you than a 32-bit traditional `int` key. Don't assume it will be roughly the same. The relative size of your tables (and especially of your indexed columns) compared to your primary key column will have a big impact on the overall database size and performance hit. I use COMB values frequently in moderate-sized databases without any issues, but YMMV.
 
-(6) It's best to use these in a database table only if there are no other date/time stamp columns that duplicate this information, otherwise you have a functional dependency. The best use for a COMB is where (a) you want the range and randomness of the GUID structure without page splits under load, and (b) any actual use of the date/time information is rare (for example, for debugging purposes).
+(6) It's best to use these in a database table only if there are no other date/time stamp columns that duplicate this information, otherwise you have a functional dependency. The best use for a COMB is where (a) you want the range and randomness of the GUID structure without index splits under load, and (b) any actual use of the date/time information is rare (for example, for debugging purposes).
 
 More Information
 =================================
