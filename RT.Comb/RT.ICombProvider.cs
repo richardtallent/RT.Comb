@@ -17,14 +17,35 @@
 
 namespace RT.CombUtils {
 
+	/// <summary>
+	/// A simple interface for interacting with COMB GUIDs.
+	/// </summary>
 	public interface ICombProvider {
 
+		/// <summary>
+		/// The variant of COMB that this provider creates.
+		/// </summary>
 		CombVariant Variant { get; set; }
 
+		/// <summary>
+		/// Creates a new COMB GUID using the current Variant, a new random GUID, and the current UTC timestamp.
+		/// </summary>
+		/// <returns>A new COMB GUID</returns>
 		Guid Create();
 
+		/// <summary>
+		/// Extracts the DateTime embedded in a COMB GUID of the current Variant.
+		/// </summary>
+		/// <param name="value">COMB GUID</param>
+		/// <returns>DateTime embedded in <paramref name="value"/></returns>
 		DateTime FromComb(Guid value);
 
+		/// <summary>
+		/// Combines a given GUID and DateTime into a COMB GUID.
+		/// </summary>
+		/// <param name="value">Base GUID value</param>
+		/// <param name="timestamp">DateTime value to combine with <paramref name="value"/></param>
+		/// <returns>A new COMB that combines <paramref name="value"/> and <paramref name="timestamp"/></returns>
 		Guid ToComb(Guid value, DateTime timestamp);
 
 	}

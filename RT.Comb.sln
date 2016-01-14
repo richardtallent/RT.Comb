@@ -1,4 +1,4 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
@@ -7,6 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RT.Comb", "RT.Comb\RT.Comb.
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F36F80B3-6C8D-43F6-A3C9-4535A15B8EB7}"
 	ProjectSection(SolutionItems) = preProject
+GCop.json = GCop.json
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -18,12 +19,12 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E9274D0-2E5F-466E-A19E-BD985D5D27AE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9EC60E49-F042-48A3-AF2F-9867857CB29C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9EC60E49-F042-48A3-AF2F-9867857CB29C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9EC60E49-F042-48A3-AF2F-9867857CB29C}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{9EC60E49-F042-48A3-AF2F-9867857CB29C}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{9EC60E49-F042-48A3-AF2F-9867857CB29C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9EC60E49-F042-48A3-AF2F-9867857CB29C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection

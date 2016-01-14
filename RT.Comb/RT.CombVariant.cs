@@ -16,11 +16,21 @@
 
 namespace RT.CombUtils {
 
+	/// <summary>
+	/// A enumerated list of the variants of COMB supported by this library.
+	/// </summary>
 	public enum CombVariant {
-		// This variant should be used with MSSQL, since it sorts GUID values in a novel order.
+
+		/// <summary>
+		/// This variant should be used with MSSQL, since it sorts GUID values in a novel order. 
+		/// </summary>
 		SqlServer,
-		// This variant should be used with PostgreSql and other systems that sort GUID values in byte order.
+
+		/// <summary>
+		/// This variant should be used with PostgreSql and other systems that sort GUID values in byte order.
+		/// </summary>
 		ByteOrder
+
 	}
 
 }

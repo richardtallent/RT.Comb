@@ -16,11 +16,10 @@ using static System.FormattableString;
 	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-[assembly: CLSCompliant(true)]
 namespace RT.CombUtils {
 
 	/// <summary>
-	/// Utilities for decoding and encoding the date in a Comb Guid.
+	/// Utilities for decoding and encoding the date in a COMB GUID.
 	/// </summary>
 	public static class Comb {
 
@@ -33,14 +32,16 @@ namespace RT.CombUtils {
 		private const double TicksPerMillisecond = 3d / 10d;
 
 		/// <summary>
-		/// Return a new GUID COMB of the specified variant.
+		/// Return a new GUID COMB of the specified variant, consisting of a random GUID combined with the current UTC timestamp.
 		/// </summary>
+		/// <param name="variant">The COMB variant to use</param>
+		/// <returns></returns>
 		public static Guid Create(CombVariant variant) {
 			return ToComb(Guid.NewGuid(), DateTime.UtcNow, variant);
 		}
 
 		/// <summary>
-		/// Retrieve the DateTime value previously stored in a COMB Guid value.
+		/// Retrieve the DateTime value previously stored in a COMB GUID value.
 		/// </summary>
 		public static DateTime FromComb(Guid comb, CombVariant variant) {
 			var bytes = comb.ToByteArray();
@@ -60,7 +61,7 @@ namespace RT.CombUtils {
 		}
 
 		/// <summary>
-		/// Encode a given DateTime value in the given Guid value.
+		/// Encode a given DateTime value in the given GUID value.
 		/// </summary>
 		public static Guid ToComb(Guid value, DateTime timestamp, CombVariant variant) {
 			var bytes = value.ToByteArray();
