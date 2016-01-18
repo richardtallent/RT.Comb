@@ -25,8 +25,8 @@ Both of these have a static class called `Comb` that contains the core functions
 
 The `ICombProvider` interface is identical to that of the static classes. So, regardless which variant you use and whether you use the static classes or a provider instance, there are really only two methods to learn:
 
- - Create(), which can take no arguments, a `Guid`, a `DateTime`, or both, and returns a COMB Guid.
- - GetTimestamp(), which takes an existing COMB `Guid` and returns the embedded `DateTime` value.
+ - `Create()`, with overloads that take no arguments, a `Guid`, a `DateTime`, or both. All return a COMB Guid.
+ - `GetTimestamp()`, which takes an existing COMB `Guid` and returns the embedded `DateTime` value.
 
 While the static classes are more convenient, the `ICombProvider` interface is useful if you need to inject which variant to use rather than baking it in.
 
