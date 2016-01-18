@@ -16,74 +16,21 @@ using static System.FormattableString;
 	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-namespace RT.CombUtils {
+namespace RT {
 
 	/// <summary>
-	/// Utilities for decoding and encoding the date in a COMB GUID.
+	/// Common constants and functions for both COMB implementations.
 	/// </summary>
-	public static class Comb {
+	internal static class CombUtilities {
 
 		// Various constants
-		private const int StartIndexSqlServer = 10;
-		private const int CombDateSize = 6;
-		private static readonly DateTime MinCombDate = new DateTime(1900, 1, 1);
-		private static readonly DateTime MaxCombDate = MinCombDate.AddDays(ushort.MaxValue);
-		private const double TicksPerDay = 86400d * 300d;
-		private const double TicksPerMillisecond = 3d / 10d;
+		internal const int NumDateBytes = 6;
+		internal static readonly DateTime MinCombDate = new DateTime(1900, 1, 1);
+		internal static readonly DateTime MaxCombDate = MinCombDate.AddDays(ushort.MaxValue);
+		internal const double TicksPerDay = 86400d * 300d;
+		internal const double TicksPerMillisecond = 3d / 10d;
 
-		/// <summary>
-		/// Return a new GUID COMB of the specified variant, consisting of a random GUID combined with the current UTC timestamp.
-		/// </summary>
-		/// <param name="variant">The COMB variant to use</param>
-		/// <returns></returns>
-		public static Guid Create(CombVariant variant) {
-			return ToComb(Guid.NewGuid(), DateTime.UtcNow, variant);
-		}
-
-		/// <summary>
-		/// Retrieve the DateTime value previously stored in a COMB GUID value.
-		/// </summary>
-		public static DateTime FromComb(Guid comb, CombVariant variant) {
-			var bytes = comb.ToByteArray();
-			var dtbytes = new byte[CombDateSize];
-
-			if(variant == CombVariant.SqlServer) {
-				Array.Copy(bytes, StartIndexSqlServer, dtbytes, 0, CombDateSize);
-			} else {
-				Array.Copy(bytes, 0, dtbytes, 0, CombDateSize);
-				// Move nybbles 5-8 to 6-9, overwriting the existing 9 (version "4")
-				dtbytes[4] = (byte)((byte)(dtbytes[3] << 4) | (byte)(dtbytes[4] & 0x0F));
-				dtbytes[3] = (byte)((byte)(dtbytes[2] << 4) | (byte)(dtbytes[3] >> 4));
-				dtbytes[2] = (byte)(dtbytes[2] >> 4);
-			}
-
-			return BytesToDateTime(dtbytes);
-		}
-
-		/// <summary>
-		/// Encode a given DateTime value in the given GUID value.
-		/// </summary>
-		public static Guid ToComb(Guid value, DateTime timestamp, CombVariant variant) {
-			var bytes = value.ToByteArray();
-			var dtbytes = DateTimeToBytes(timestamp);
-
-			if(variant == CombVariant.SqlServer) {
-				Array.Copy(dtbytes, 0, bytes, StartIndexSqlServer, CombDateSize);
-			} else {
-				// Nybble 6-9 move left to 5-8. Nybble 9 is set to "4" (the version)
-				dtbytes[2] = (byte)((byte)(dtbytes[2] << 4) | (byte)(dtbytes[3] >> 4));
-				dtbytes[3] = (byte)((byte)(dtbytes[3] << 4) | (byte)(dtbytes[4] >> 4));
-				dtbytes[4] = (byte)(0x40 | (byte)(dtbytes[4] & 0x0F));
-				// Overwrite the first six bytes
-				Array.Copy(dtbytes, 0, bytes, 0, CombDateSize);
-			}
-
-			return new Guid(bytes);
-		}
-
-		// Private methods
-
-		private static byte[] DateTimeToBytes(DateTime timestamp) {
+		internal static byte[] DateTimeToBytes(DateTime timestamp) {
 			if (timestamp < MinCombDate) throw new ArgumentException(Invariant($"COMB values only support dates on or after {MinCombDate}"));
 			if (timestamp > MaxCombDate) throw new ArgumentException(Invariant($"COMB values only support dates through {MaxCombDate}"));
 			// Convert the time to 300ths of a second. SQL Server uses float math for this before converting to an integer, so this does as well
@@ -107,7 +54,7 @@ namespace RT.CombUtils {
 			return result;
 		}
 		
-		private static DateTime BytesToDateTime(byte[] value) {
+		internal static DateTime BytesToDateTime(byte[] value) {
 			// Attempt to convert the first 6 bytes.
 			var dayBytes = new byte[2];                     // Empty ushort
 			var tickBytes = new byte[4];                    // Empty int

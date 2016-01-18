@@ -15,38 +15,37 @@
 	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-namespace RT.CombUtils {
+namespace RT.CombByteOrder {
 
 	/// <summary>
-	/// Default implementation of ICombProvider.
+	/// Default implementation of ICombProvider for this namespace. This code is the same for both variants.
 	/// </summary>
 	public class CombProvider : ICombProvider {
 
 		/// <summary>
-		/// The variant of COMB that this provider creates.
+		/// Returns a new Guid COMB, consisting of a random Guid combined with the current UTC timestamp.
 		/// </summary>
-		public CombVariant Variant { get; set; } = CombVariant.SqlServer;
+		public Guid Create() => Comb.Create();
 
 		/// <summary>
-		/// Creates a new COMB GUID using the current Variant, a new random GUID, and the current UTC timestamp.
+		/// Returns a new Guid COMB, consisting of the specified Guid combined with the current UTC timestamp.
 		/// </summary>
-		/// <returns>A new COMB GUID</returns>
-		public Guid Create() => Comb.Create(Variant);
+		public Guid Create(Guid value) => Comb.Create(value);
 
 		/// <summary>
-		/// Extracts the DateTime embedded in a COMB GUID of the current Variant.
+		/// Returns a new Guid COMB, consisting of a random Guid combined with the provided timestamp.
 		/// </summary>
-		/// <param name="value">COMB GUID</param>
-		/// <returns>DateTime embedded in <paramref name="value"/></returns>
-		public DateTime FromComb(Guid value) => Comb.FromComb(value, Variant);
+		public Guid Create(DateTime timestamp) => Comb.Create(timestamp);
 
 		/// <summary>
-		/// Combines a given GUID and DateTime into a COMB GUID.
+		/// Returns a new Guid COMB, consisting of the provided Guid and provided timestamp.
 		/// </summary>
-		/// <param name="value">Base GUID value</param>
-		/// <param name="timestamp">DateTime value to combine with <paramref name="value"/></param>
-		/// <returns>A new COMB that combines <paramref name="value"/> and <paramref name="timestamp"/></returns>
-		public Guid ToComb(Guid value, DateTime timestamp) => Comb.ToComb(value, timestamp, Variant);
+		public Guid Create(Guid value, DateTime timestamp) => Comb.Create(value, timestamp);
+
+		/// <summary>
+		/// Returns the timestamp previously stored in a COMB Guid value.
+		/// </summary>
+		public DateTime GetTimestamp(Guid value) => Comb.GetTimestamp(value);
 
 	}
 

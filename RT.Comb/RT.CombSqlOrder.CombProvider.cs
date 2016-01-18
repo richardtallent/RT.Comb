@@ -1,4 +1,5 @@
-﻿/*
+﻿using System;
+/*
 	Copyright 2015 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
@@ -14,22 +15,37 @@
 	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-namespace RT.CombUtils {
+namespace RT.CombSqlOrder {
 
 	/// <summary>
-	/// A enumerated list of the variants of COMB supported by this library.
+	/// Default implementation of ICombProvider for this namespace. This code is the same for both variants.
 	/// </summary>
-	public enum CombVariant {
+	public class CombProvider : ICombProvider {
 
 		/// <summary>
-		/// This variant should be used with MSSQL, since it sorts GUID values in a novel order. 
+		/// Returns a new Guid COMB, consisting of a random Guid combined with the current UTC timestamp.
 		/// </summary>
-		SqlServer,
+		public Guid Create() => Comb.Create();
 
 		/// <summary>
-		/// This variant should be used with PostgreSql and other systems that sort GUID values in byte order.
+		/// Returns a new Guid COMB, consisting of the specified Guid combined with the current UTC timestamp.
 		/// </summary>
-		ByteOrder
+		public Guid Create(Guid value) => Comb.Create(value);
+
+		/// <summary>
+		/// Returns a new Guid COMB, consisting of a random Guid combined with the provided timestamp.
+		/// </summary>
+		public Guid Create(DateTime timestamp) => Comb.Create(timestamp);
+
+		/// <summary>
+		/// Returns a new Guid COMB, consisting of the provided Guid and provided timestamp.
+		/// </summary>
+		public Guid Create(Guid value, DateTime timestamp) => Comb.Create(value, timestamp);
+
+		/// <summary>
+		/// Returns the timestamp previously stored in a COMB Guid value.
+		/// </summary>
+		public DateTime GetTimestamp(Guid value) => Comb.GetTimestamp(value);
 
 	}
 
