@@ -37,7 +37,7 @@ When generating values, note that on Windows platforms, while a COMB's time reso
 
 A NuGet package is available:
 
-https://www.nuget.org/packages/RT.Comb/1.3.0
+https://www.nuget.org/packages/RT.Comb/
 
 Background
 ==========
