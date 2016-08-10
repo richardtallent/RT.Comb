@@ -1,0 +1,30 @@
+{
+  "name": "RT.Comb",
+  "version": "1.4.0-*",
+  "copyright": "Copyright 2015-2016 Richard S. Tallent",
+  "title": "RT.Comb",
+  "authors": [
+    "Richard Tallent"
+  ],
+  "description": "Library to create and use COMB (timestamped sequential) GUID variants for Microsoft SQL Server and PostgreSQL. See the GitHub site for more details.",
+  "packOptions": {
+    "licenseUrl": "https://opensource.org/licenses/MIT",
+    "repository": {
+      "url": "https://github.com/richardtallent/RT.Comb"
+    },
+    "iconUrl": "http://www.tallent.us/code/RT.Comb.png",
+    "projectUrl": "https://github.com/richardtallent/RT.Comb",
+    "tags": [".NETCore Comb GUID PostgreSQL MSSQL"]
+  },
+  "emitEntryPoint": false,
+  "buildOptions": {
+      "platform": "anycpu"
+  },
+  "frameworks": {
+    "netstandard1.6": {}
+  },
+  "include": "*.cs",
+  "dependencies": {
+    "NETStandard.Library":"1.6.0"
+  }
+}
