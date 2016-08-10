@@ -13,6 +13,7 @@ Revision History
  - 1.1		2016-01		First release
  - 1.2		2016-01		Clean up, add unit tests
  - 1.3		2016-01-18	Major revision of interface
+ - 1.4      2016-08-10  Upgrade to .NETCore 1.0, switch tests to Xunit
 
 Using this Library
 ====================

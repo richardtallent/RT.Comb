@@ -1,9 +1,8 @@
 ﻿using System;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Xunit;
 
 namespace RT.CombTests {
 
-	[TestClass]
 	public class MainTests {
 
 		/// <summary>
@@ -11,13 +10,13 @@ namespace RT.CombTests {
 		/// COMB has a resolution of 1/300s (3.333...ms), so the original and decoded datetime should 
 		/// never be off by more than 4ms.
 		/// </summary>
-		[TestMethod]
+		[Fact]
 		public void TestIfSqlOrderReversible() {
 			var dt = DateTime.UtcNow;
 			var comb = CombSqlOrder.Comb.Create(dt);
 			var dtDecoded = CombSqlOrder.Comb.GetTimestamp(comb);
 			var delta = Math.Abs((dtDecoded - dt).TotalMilliseconds);
-			Assert.IsTrue(delta <= 4);
+			Assert.True(delta <= 4);
 		}
 
 		/// <summary>
@@ -25,13 +24,13 @@ namespace RT.CombTests {
 		/// COMB has a resolution of 1/300s (3.333...ms), so the original and decoded datetime should 
 		/// never be off by more than 4ms.
 		/// </summary>
-		[TestMethod]
+		[Fact]
 		public void TestIfByteOrderReversible() {
 			var dt = DateTime.UtcNow;
 			var comb = CombByteOrder.Comb.Create(dt);
 			var dtDecoded = CombByteOrder.Comb.GetTimestamp(comb);
 			var delta = Math.Abs((dtDecoded - dt).TotalMilliseconds);
-			Assert.IsTrue(delta <= 4);
+			Assert.True(delta <= 4);
 		}
 
 		/// <summary>
@@ -50,7 +49,7 @@ namespace RT.CombTests {
 		/// less than comb2, the DateTime values are being sorted before any of the other bits (this
 		/// is the expected outcome).
 		/// </summary>
-		[TestMethod]
+		[Fact]
 		public void TestIfSqlOrderSortsInMSSQL() {
 			var g1 = MaxGuid();
 			var g2 = Guid.Empty;
@@ -58,7 +57,7 @@ namespace RT.CombTests {
 			System.Data.SqlTypes.SqlGuid comb1 = CombSqlOrder.Comb.Create(g1, new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 			System.Data.SqlTypes.SqlGuid comb2 = CombSqlOrder.Comb.Create(g2, new DateTime(2000, 1, 1, 0, 0, 1, DateTimeKind.Utc));
 			// Now they sort the opposite way as they would have without the dates
-			Assert.IsTrue((bool)(comb1 < comb2));
+			Assert.True((bool)(comb1 < comb2));
 		}
 
 		/// <summary>
@@ -70,7 +69,7 @@ namespace RT.CombTests {
 		/// Thus, if the result shows that comb1 is less than comb2, the DateTime values are being 
 		/// sorted before any of the other bits (this is the expected outcome).
 		/// </summary>
-		[TestMethod]
+		[Fact]
 		public void TestIfByteOrderSortsAsBytes() {
 			var g1 = MaxGuid();
 			var g2 = Guid.Empty;
@@ -83,7 +82,7 @@ namespace RT.CombTests {
 				result = comb1[i].CompareTo(comb2[i]);
 				if(result != 0) break;
 			}
-			Assert.AreEqual(-1, result);
+			Assert.Equal(-1, result);
 		}
 
 	}
