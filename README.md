@@ -129,7 +129,7 @@ For reference, here is how to create an equivalent COMB `uniqueidentifier` in T-
 
 Here is how one would extract the `datetime` value from a COMB `uniqueidentifier`:
 
-	CAST(SUBSTRING(CAST(0 AS binary(2)) + CAST(value AS binary(16), 10, 6) AS datetime)
+    CAST(CAST(0 AS binary(2)) + SUBSTRING(CAST(value AS binary(16)), 11, 6) AS datetime)
 
 The overhead for both of these in MSSQL is minimal.
 
