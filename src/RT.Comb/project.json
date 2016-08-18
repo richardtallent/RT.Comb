@@ -20,11 +20,12 @@
   "buildOptions": {
       "platform": "anycpu"
   },
-  "frameworks": {
-    "netstandard1.6": {}
-  },
+	"frameworks": {
+		"net46": {},
+		"netstandard1.6": {
+			"dependencies": { "NETStandard.Library": "1.6.0" }
+		}
+	},
   "include": "*.cs",
-  "dependencies": {
-    "NETStandard.Library":"1.6.0"
-  }
+  "dependencies": { }
 }
