@@ -1,6 +1,6 @@
 {
   "name": "RT.Comb",
-  "version": "1.4.0-*",
+  "version": "1.4.1-*",
   "copyright": "Copyright 2015-2016 Richard S. Tallent",
   "title": "RT.Comb",
   "authors": [
@@ -21,7 +21,7 @@
       "platform": "anycpu"
   },
   "frameworks": {
-    "netstandard1.6": {}
+    "netstandard1.3": {}
   },
   "include": "*.cs",
   "dependencies": {
