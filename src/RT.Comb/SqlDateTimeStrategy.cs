@@ -1,7 +1,6 @@
 ﻿using System;
-using static System.FormattableString;
 /*
-	Copyright 2015 Richard S. Tallent, II
+	Copyright 2015-2016 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -16,53 +15,54 @@ using static System.FormattableString;
 	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-namespace RT {
+namespace RT.Comb {
 
 	/// <summary>
-	/// Common constants and functions for both COMB implementations.
+	/// Represents a mechanism for converting DateTime values back and forth to byte arrays.
+	/// Strategies can differ depending on how many bytes of the GUID you wish to overwrite,
+	/// what time resolution you want, etc.
 	/// </summary>
-	internal static class CombUtilities {
+    public class SqlDateTimeStrategy : ICombDateTimeStrategy {
 
-		// Various constants
-		internal const int NumDateBytes = 6;
-		internal static readonly DateTime MinCombDate = new DateTime(1900, 1, 1);
-		internal static readonly DateTime MaxCombDate = MinCombDate.AddDays(ushort.MaxValue);
-		internal const double TicksPerDay = 86400d * 300d;
-		internal const double TicksPerMillisecond = 3d / 10d;
+		private const double TicksPerDay = 86400d * 300d;
 
-		internal static byte[] DateTimeToBytes(DateTime timestamp) {
-			if (timestamp < MinCombDate) throw new ArgumentException(Invariant($"COMB values only support dates on or after {MinCombDate}"));
-			if (timestamp > MaxCombDate) throw new ArgumentException(Invariant($"COMB values only support dates through {MaxCombDate}"));
+		private const double TicksPerMillisecond = 3d / 10d;
+
+		public int NumDateBytes { get; } = 6;
+
+		public DateTime MinDateTimeValue { get; } = new DateTime(1900, 1, 1);
+
+		public DateTime MaxDateTimeValue { get { return MinDateTimeValue.AddDays(ushort.MaxValue); } }
+
+		public byte[] DateTimeToBytes(DateTime timestamp) {
 			// Convert the time to 300ths of a second. SQL Server uses float math for this before converting to an integer, so this does as well
 			// to avoid rounding errors. This is confirmed in MSSQL by SELECT CONVERT(varchar, CAST(CAST(2 as binary(8)) AS datetime), 121),
 			// which would return .006 if it were integer math, but it returns .007.
 			var ticks = (int)(timestamp.TimeOfDay.TotalMilliseconds * TicksPerMillisecond);
-			var days = (ushort)(timestamp - MinCombDate).TotalDays;
+			var days = (ushort)(timestamp - MinDateTimeValue).TotalDays;
 			var tickBytes = BitConverter.GetBytes(ticks);
 			var dayBytes = BitConverter.GetBytes(days);
 
-			if(BitConverter.IsLittleEndian)
-			{
+			if(BitConverter.IsLittleEndian) {
 				// x86 platforms store the LEAST significant bytes first, we want the opposite for our arrays
 				Array.Reverse(dayBytes);
 				Array.Reverse(tickBytes);
 			}
 
-			var result = new byte[6];
+			var result = new byte[NumDateBytes];
 			Array.Copy(dayBytes, 0, result, 0, 2);
 			Array.Copy(tickBytes, 0, result, 2, 4);
 			return result;
 		}
-		
-		internal static DateTime BytesToDateTime(byte[] value) {
+
+		public DateTime BytesToDateTime(byte[] value) {
 			// Attempt to convert the first 6 bytes.
 			var dayBytes = new byte[2];                     // Empty ushort
 			var tickBytes = new byte[4];                    // Empty int
 			Array.Copy(value, 0, dayBytes, 0, 2);
 			Array.Copy(value, 2, tickBytes, 0, 4);
 
-			if(BitConverter.IsLittleEndian)
-			{
+			if(BitConverter.IsLittleEndian) {
 				// COMBs store the MOST significant bytes first, we need the opposite to convert back to x86-form int/ushort
 				Array.Reverse(dayBytes);
 				Array.Reverse(tickBytes);
@@ -77,9 +77,9 @@ namespace RT {
 				throw new ArgumentException("Not a COMB, time component exceeds 24 hours.");
 			}
 
-			return MinCombDate.AddDays(days).AddMilliseconds((double)ticks / TicksPerMillisecond);
+			return MinDateTimeValue.AddDays(days).AddMilliseconds((double)ticks / TicksPerMillisecond);
 		}
 
-	}
+    }
 
 }
