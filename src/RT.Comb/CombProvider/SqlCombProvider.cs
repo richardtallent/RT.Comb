@@ -1,3 +1,4 @@
+using System;
 /*
 	Copyright 2015-2016 Richard S. Tallent, II
 
@@ -16,12 +17,26 @@
 
 namespace RT.Comb {
 
-	public static class Constants {
-		// From private DateTime.TicksPerMillisecond
-		public const long TicksPerMillisecond = 10000;
-		public static readonly int PostgreSqlGuidOffset = 0;
-		public static readonly int SqlServerGuidOffset = 10;
+    public class SqlCombProvider : BaseCombProvider {
 
-	}
+		private const int EmbedAtIndex = 10;
+
+		public SqlCombProvider(ICombDateTimeStrategy dateTimeStrategy) : base(dateTimeStrategy) {}
+
+		public override Guid Create(Guid value, DateTime timestamp) {
+			var gbytes = value.ToByteArray();
+			var dbytes = _dateTimeStrategy.DateTimeToBytes(timestamp);
+			Array.Copy(dbytes, 0, gbytes, EmbedAtIndex, _dateTimeStrategy.NumDateBytes);
+			return new Guid(gbytes);
+		}
+
+		public override DateTime GetTimestamp(Guid comb) {
+			var gbytes = comb.ToByteArray();
+			var dbytes = new byte[_dateTimeStrategy.NumDateBytes];
+			Array.Copy(gbytes, EmbedAtIndex, dbytes, 0, _dateTimeStrategy.NumDateBytes);
+			return _dateTimeStrategy.BytesToDateTime(dbytes);
+		}
+
+    }
 
 }

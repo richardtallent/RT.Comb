@@ -15,6 +15,7 @@ Revision History
  - 1.3		2016-01-18	Major revision of interface
  - 1.4      2016-08-10  Upgrade to .NETCore 1.0, switch tests to Xunit
  - 2.0      2016-11-19	Corrected byte-order placement, reorganized for better DI, upgraded to .NETCore 1.1, downgraded to .NET 4.5.1
+ - 2.1      2016-11-20  Simplified API and corrected/tested byte order for PostgreSql, more README rewrites
 
 Background
 ==========
@@ -33,63 +34,56 @@ https://www.nuget.org/packages/RT.Comb/
 
 Everything is within the `RT.Comb` namespace.
 
-The `ICombProvider` interface provides a `Create()` function (with several signature variants) to return a new COMB `Guid` value, and a `GetTimestamp()` function to return the embedded `DateTime` within an existing COMB value.
+The `ICombProvider` interface defines a `Create()` function (with several signature variants) to return new COMB `Guid` values, and a `GetTimestamp()` function to return the embedded `DateTime` within an existing COMB `Guid` value.
 
-`CombProvider` implements this interface. Its constructor takes a single argument of type `CombProviderOptions`. The options currently include:
- - `GuidOffset` (`int`), the byte position where the embedded timestamp should begin.
- - `DateTimeStrategy` (`IDateTimeStrategy`), which handles the conversion between `DateTime` values and the COMB-embedded byte array.
+Two implementations of `ICombProvider` are provided:
 
-The idea here is to make it possible to create new variations on the COMB structure to fit your needs without having to reimplement `ICombProvider`
-from scratch.
+- `SqlCombProvider`: This creates and decodes COMBs in GUIDs that are compatible with the way Microsoft SQL Server sorts `uniqueidentifier` values -- i.e., starting at the 11th byte.
 
-Two `IDateTimeStrategy` implementations are included. Both happen to encode DateTime values in 6 bytes, but other implementations could use fewer or more bytes:
- - `SqlDateTimeStrategy`, which encodes the DateTime in a way that is highly compatible with Microsoft SQL Server's `datetime` data type.
- - `UnixDateTimeStrategy`, which encodes the DateTime using the millisecond version of the Unix epoch timestamp.
+- `PostgreSqlCombProvider`: This creates and decodes COMBs in GUIDs that are compatible with the way PostegreSQL sorts `uuid` values -- i.e., starting with the first byte shown in string representations of a `Guid`.
 
-Your choice of strategy will probably be dictated by your chosen database platform, but the option is yours, or you can build your own strategy if you want higher or lower time resolution, a different epoch date, etc.
+Both of these implementations have a single constructor that takes a single argument of type `IDateTimeStrategy`, which handles the actual conversion between `System.DateTime` values and the bytes that are written into the GUIDs. Two `IDateTimeStrategy` implementations are included:
+
+ - `SqlDateTimeStrategy` encodes the DateTime in a way that is highly compatible with Microsoft SQL Server's `datetime` data type and the original COMB implementation.
+ - `UnixDateTimeStrategy` encodes the DateTime using the millisecond version of the Unix epoch timestamp.
+
+You can use either DateTimeStrategy with either Provider--or write your own if neither of these fits your needs.
 
 Prior to version 2.0, I used static classes with hard-coded options. With 2.0, I switched to a traditional class to provide more flexibility and to allow me to inject the preferred options as a Singleton using ASP.NET Core. The class is thread-safe.
 
-GUID Data Structure
-===================
+UUIDs and GUIDs
+===============
 *(For a more comprehensive treatment, see Wikipedia.)*
 
-Standard GUIDs are 128-bit (16-byte) values, wherein most of those bits hold a random value. When viewed as a string, the bytes are represented in hex in five groups, separated by hyphens:
+Standard UUIDs/GUIDs are 128-bit (16-byte) values, wherein most of those bits hold a random value. When viewed as a string, the bytes are represented in hex in five groups, separated by hyphens:
 
     xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    00112233-4455-6677-8899-AABBCCDDEEFF
     version       ^
     variant            ^
 
-Each character represents a nybble, and each byte is shown with the most significant nybble first, as usual (e.g., "0F" is 16, "F0" is 128).
+Structurally, this breaks down into one 32-bit unsigned integer (`Data1`), two 16-bit unsigned integers (`Data2`, `Data3`), and 8 bytes (`Data4`). The most significant nybble of Data3 (the 7th byte in string order, 8th in the internal bytes of `System.Guid`) is the GUID "version" number--generally 4 (0100b). Also, the most significant 2-3 bits of the first byte of Data4 is the "variant" value. For common GUIDs, the first two of these bits will be `10`, and the third is random. The remaining bits for a version 4 GUID are random.
 
-The most significant 2-3 bits of nybble 17 are not random -- they store a "variant" value. For standard GUIDs, the first two bits are "10", the other two bits are random, and the 13th nybble stores the "version" number (usually "4").
+The UUID standard (RFC 4122) specifies that the `Data1`, `Data2`, and `Data3` integers are stored and shown in *network byte order* (a.k.a. "big endian" or most significant byte first). However, while Microsoft's GUID implementation *shows and sorts* the values as if they were in big endian form, internally it stores the bytes for these values in the native form for the processor (which, on x86, means little endian).
 
-PostgreSQL stores and sorts (and tools like pgAdmin3 display) `UUID` values as a 16-byte array, left to right. This conforms with the RFC 4122 standards for UUIDs.
+This means that the bytes you get from `Guid.ToString()` are actually stored in the GUID's internal byte array in the following order:
 
-However, Microsoft.NET's `Guid` data type (and MSSQL's `uniqueidentifier` type), when converted to a string, come out with the bytes in this order in the string:
+    33221100-5544-7766-8899-AABBCCDDEEFF
 
-	3210-54-76-89-ABCDEF
+Npgsql reads incoming bytes for these three fields using `GetInt32()` and `GetInt16()`, which assume the bytes are in little endian form. This ensures that .NET will return the same *string* as non-.NET tools that show PostgreSQL UUID values, but the bytes inside .NET and inside PostgreSQL are stored in a different order. Reference:
 
-This is because Microsoft's GUID is a structure made up of a DWORD (32-bit), two WORDs (16-bit), and an 8-byte array. The x86 platform uses Little-endian form for the DWORD and WORD values. So if the first 4 bytes of a GUID are "FE 00 00 00", the DWORD value is 254. When that DWORD value is then converted to a hex string, it comes out as "000000FE", the reverse of the byte order.
+https://github.com/npgsql/npgsql/blob/4ef74fa78cffbb4b1fdac00601d0ee5bff5e242b/src/Npgsql/TypeHandlers/UuidHandler.cs
 
-Microsoft.NET *sorts* `Guid` bytes in the *order they are displayed as a string*. In other words, it sorts first by the DWORD *value* (right to left), then by the two WORD values (right to left), and finally by the remaining 8 bytes (left to right).
+IDateTimeStrategy
+=================
+`IDateTimeStrategy` implementations are responsible for returning a byte array, most significant byte first, representing the timestamp. This byte order is independent of whatever swapping we might have to do to embed the value in a GUID at a certain index. They can return either 4 or 6 bytes, both built-in implementations use 6 bytes.
 
-However, MSSQL (and .NET's `System.Data.SqlTypes.SqlGuid` type) sort Guids in a different order. Here is the order in which they are sorted:
+SqlDateTimeStrategy
+-------------------
+This strategy returns bytes for a timestamp with *part* of an MSSQL `datetime` value. The `datetime` type in MSSQL is an 8-byte structure. The first four bytes are a *signed* integer representing the number of days since January 1, 1900. Negative values are permitted to go back to `1752-01-01` (for Reasons), and positive values are permitted through `9999-12-12`. The remaining four bytes represent the time as the number of unsigned 300ths of a second since midnight. Since a day is always 24 hours, this integer never uses more than 25 bits. 
 
-    ABCDEF8967450123
+For the COMB, we use all four bytes of the time and two bytes of the date. This means our date has no sign bit and has a maximum value of 65,535, limiting our date range to January 1, 1900 through June 5, 2079 -- a very reasonable spread.
 
-In other words, byte offset `A` is sorted first, then `B`, etc., with the byte at offset `3` being the least significant sort position. Here is a fiddler illustrating this: https://dotnetfiddle.net/X5Sk3C
-
-SqlDateTimeStrategy Data Structure
-==================================
-This strategy replaces 6 bytes of the GUID value with *part* of an MSSQL `datetime` value. Assuming you use the same offset (10), this strategy is compatible with the original COMB article, and is easy to convert back and forth to `datetime` values using T-SQL. Overwriting six bytes still leaves us 2^74 possible random values for every 1/300th of a second, so there should be no cause for concern about the embedded timestamp creating any significant risk of GUID value collision.
-
-The `datetime` type in MSSQL is an 8-byte structure. The first four bytes are a *signed* integer representing the number of days since January 1, 1900. Negative values are permitted to go back to 1752-01-01 (for Reasons), and positive values are permitted through 9999-12-12. The remaining four bytes represent the time as the number of 300ths of a second since midnight. Since a day is always 24 hours, this integer never exceeds 25 bits of data and is never negative, so you can think of this value as either signed or unsigned.
-
-For the COMB, we use all four bytes of the time, but only two bytes of the date. This means our date has no sign bit and has a maximum value of 65535. This limits our date range to January 1, 1900 through June 5, 2079 -- a very reasonable spread for either historical or future transactional data.
-
-This is the recommended implementation for use with MSSQL *if* you want to easily encode or decode the timestamp directly in T-SQL without use of .NET functions. Here is some reference code for doing so (using the recommended GuidOffset, keep reading for more on that option):
+If you use this in conjunction with `SqlCombProvider`, your COMB values will be compatible with the original COMB article, and you can easily use plain T-SQL to encode and decode the timestamps without requiring .NET (the overhead for doing this in T-SQL is minimal):
 
 Creating a COMB `uniqueidentifier` in T-SQL with the current date and time:
 
@@ -99,17 +93,25 @@ Extracting a `datetime` value from a COMB `uniqueidentifier` created using the a
 
 	CAST(SUBSTRING(CAST(0 AS binary(2)) + CAST(value AS binary(16), 10, 6) AS datetime)
 
-The overhead for both of these in MSSQL is minimal.
+UnixDateTimeStrategy
+--------------------
+This implementation was inspired by work done on the Marten project, which uses a modified version of RT.Comb. This also returns 6 bytes, but as a 48-bit unsigned integer representing the number of *milliseconds* since the UNIX epoch date (1970-01-01). Since this method is far more space-efficient than the MSSQL `datetime` structure, it will cover you well into the 85th Century. This is the recommended implementation for use with PostgreSQL, or with SQL Server if you aren't concerned with precise T-SQL based conversions to SQL `datetime` values.
 
-UnixDateTimeStrategy Data Structure
-===================================
-This implementation was inspired by work done on the Marten project, which uses a modified version of RT.Comb. This also overwrites 6 bytes of the GUID, and as with SqlDateTimeStrategy, the other 74 random bits provide well beyond a reasonable amount of collision protection within each millisecond. The value is a 48-bit unsigned integer representing the number of *milliseconds* since the UNIX epoch date (1970-01-01). Since this method is far more space-efficient than the MSSQL `datetime` structure, it will cover you well into the 87th Century. This is the recommended implementation for use with non-Microsoft RDBMS packages such as PostgreSQL.
+ICombProvider
+=============
+Regardless which strategy is used for encoding the timestamp, we need to overwrite the portion of the GUID that is sorted *first*, so our GUIDs are sortable in date/time order and minimize index page splits. This differs by database platform.
 
-Guid Offsets
-============
-Regardless which strategy is used for encoding the timestamp, we need to overwrite the portion of the GUID that is sorted *first*, so our GUIDs are sortable in date/time order and minimize index page splits. This differs by database platform, so it is important to understand how your chosen platform sorts GUID values and choose the appropriate offset.
+MSSQL and `System.Data.SqlTypes.SqlGuid` sort *first* by the *last 6* `Data4` bytes, *left to right*, then the first two bytes of `Data4` (again, left to right), then `Data3`, `Data2`, and `Data1` *right to left*. This means for COMB purposes, we want to overwrite the the last 6 bytes of `Data4` (byte index 10), left to right.
 
-MSSQL sorts the last six bytes are first, left to right, so we plug our timestamp into the GUID structure starting at byte offset 10 (byte #11), as follows:
+However, PostgreSQL and `System.Guid` sort GUIDs in the order shown as a string, which means for PostgreSQL COMB values, we want to overwrite the bytes that are *shown first* from the left. Since `System.Guid` *shows* bytes for `Data1`, `Data2`, and `Data3` in a different order than it *stores* them internally, we have to account for this when overwriting those bytes. For example, our most significant byte inside a `Guid` will be at index 3, not index 0.
+
+Here is a fiddler illustrating some of this:
+
+https://dotnetfiddle.net/rW9vt7
+
+SqlCombProvider
+---------------
+As mentioned above, MSSQL sorts the *last* 6 bytes first, left to right, so we plug our timestamp into the GUID structure starting at the 11th byte, most significant byte first:
 
     00112233-4455-6677-8899-AABBCCDDEEFF
     xxxxxxxx xxxx 4xxx Vxxx MMMMMMMMMMMM  UnixDateTimeStrategy, milliseconds
@@ -118,7 +120,9 @@ MSSQL sorts the last six bytes are first, left to right, so we plug our timestam
     V = variant
 	x = random
 
-For PostgreSQL, the *first* six bytes are sorted first, so those are the ones we want to overwrite.
+PostgreSqlCombProvider
+----------------------
+For PostgreSQL, the *first* bytes are sorted first, so those are the ones we want to overwrite.
 
     MMMMMMMM MMMM 4xxx Vxxx xxxxxxxxxxxx  UnixDateTimeStrategy, milliseconds
     DDDDTTTT TTTT 4xxx Vxxx xxxxxxxxxxxx  SqlDateTimeStrategy, days and 1/300s
@@ -126,16 +130,17 @@ For PostgreSQL, the *first* six bytes are sorted first, so those are the ones we
 	V = variant
 	x = random
 
-The `Constants` static class provides default offset values for MSSQL and PostgreSQL that you can use in your `CombOptions`.
+Recall that `System.Guid` stores its bytes for `Data1` and `Data2` in a different order than they are shown, so we have to reverse the bytes we're putting into those areas so they are stored and sorted in PostgreSQL in network byte order.
 
-NOTE: in version 1.4 and prior, I made the misplaced the version number in byte 5 and did some bit-gymnastics to move the time around where I thought the number "4" would be. My error was kindly pointed out by Barry Hagan and has been fixed. **As a result, COMB values created with version 1.4 and below using the byte order method are not compatible with version 2.0 and above.** If this creates a headache for you, please let me know and we can come up with a solution. Fortunately I don't believe my little library is in heavy use in PostgreSQL environments to date (I'm just starting my first project using it myself).
+**This is a breaking change from RT.Comb version 1.4.** In prior versions, I wasn't actually able to test on PostgreSQL and got this all wrong, along with misplacing where the version nybble was and doing unnecessary bit-gymbastics to avoid overwriting it. My error was kindly pointed out by Barry Hagan and has been fixed.
 
-When PostgreSQL `UUID` values are read into .NET applications as `Guid` values, the string representation and default sort will still be different from the byte order.
+Note about entropy
+------------------
+The default implementations overwrite 48 bits of random data with the timestamp, and another 6 bits are also pre-determined (the verion and variant). This still leaves 74 random bits per unit of time (1/300th of a second for SqlDateTimeStrategy, 1/1000th of a second for UnixDateTimeStrategy). This provides well beyond a reasonable amount of protection against collision.
 
 How To Contribute
 =================
 Some missing pieces:
-- It would be nice to have a custom `IComparer` method that sorts `Guid` values using the same order that we're expecting from our database platform (i.e., like `SqlGuid` is sorted in MSSQL, and in byte order for PostgreSql).
 - More unit tests.
 - Please keep all contributions compatible with .NET Core.
 - Please use the same style (tabs, same-line opening braces, compact line spacing, etc.)

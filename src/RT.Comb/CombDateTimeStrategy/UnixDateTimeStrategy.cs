@@ -49,15 +49,16 @@ namespace RT.Comb {
 			return FromUnixTimeMilliseconds(ms);
 		}
 
-		// We purposefully are not using the FromUnixTimeMilliseconds and ToUnixTimeMilliseconds to remain compatible with .NET 4.5.1
-		public long ToUnixTimeMilliseconds(DateTime timestamp) => (timestamp.Ticks - MinDateTimeValue.Ticks) / Constants.TicksPerMillisecond; 
-		//(long)(timestamp.ToUniversalTime() - MinDateTimeValue).TotalMilliseconds;
-
 		// From private DateTime.TicksPerMillisecond
 		private const long TicksPerMillisecond = 10000;
 
+		// We purposefully are not using the FromUnixTimeMilliseconds and ToUnixTimeMilliseconds to remain compatible with .NET 4.5.1
+		//(long)(timestamp.ToUniversalTime() - MinDateTimeValue).TotalMilliseconds;
 		//public DateTime FromUnixTimeMilliseconds(long ms) => MinDateTimeValue.AddMilliseconds(ms);
-		public DateTime FromUnixTimeMilliseconds(long ms) => MinDateTimeValue.AddTicks(ms * Constants.TicksPerMillisecond);
+
+		public long ToUnixTimeMilliseconds(DateTime timestamp) => (timestamp.Ticks - MinDateTimeValue.Ticks) / TicksPerMillisecond; 
+
+		public DateTime FromUnixTimeMilliseconds(long ms) => MinDateTimeValue.AddTicks(ms * TicksPerMillisecond);
 
     }
 

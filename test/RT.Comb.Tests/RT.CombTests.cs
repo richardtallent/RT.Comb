@@ -6,9 +6,9 @@ namespace RT.CombTests {
 
 	public class MainTests {
 
-		private ICombProvider SqlCombs = new CombProvider(new CombProviderOptions(new SqlDateTimeStrategy(), Constants.SqlServerGuidOffset));
-		private ICombProvider PostgreCombs = new CombProvider(new CombProviderOptions(new UnixDateTimeStrategy(), Constants.PostgreSqlGuidOffset));
-		private ICombProvider HybridCombs = new CombProvider(new CombProviderOptions(new UnixDateTimeStrategy(), Constants.SqlServerGuidOffset));
+		private ICombProvider SqlCombs = new SqlCombProvider(new SqlDateTimeStrategy());
+		private ICombProvider PostgreCombs = new PostgreSqlCombProvider(new UnixDateTimeStrategy());
+		private ICombProvider HybridCombs = new SqlCombProvider(new UnixDateTimeStrategy());
 		private UnixDateTimeStrategy UnixStrategy = new UnixDateTimeStrategy();
 
 		/// <summary>
@@ -26,27 +26,14 @@ namespace RT.CombTests {
 		public void TestIfHybridStyleReversible() => IsReversible(HybridCombs, 0);
 
 		[Fact]
-		public void TestBinaryLong() {
-			long i = 1;
-			string bin = Convert.ToString(i, 2).PadLeft(64, '0');
-			Assert.Equal<string>(bin, (new String('0',63)) + "1");
-		}
-
-		[Fact]
-		public void TestHexLong() {
-			long i = 1;
-			string bin = Convert.ToString(i, 16).PadLeft(16, '0');
-			Assert.Equal<string>(bin, (new String('0',15)) + "1");
-		}
-
-		[Fact]
 		public void TestDateTimeToMs() {
 			var d = UnixStrategy.MinDateTimeValue.AddMilliseconds(1);
 			var ms = UnixStrategy.ToUnixTimeMilliseconds(d); 
 			Assert.Equal<long>(1, ms);
 		}
 
-		[Fact] void TestFromUnitMs() {
+		[Fact]
+		public void TestFromUnitMs() {
 			Assert.Equal(UnixStrategy.MinDateTimeValue.AddMilliseconds(1), UnixStrategy.FromUnixTimeMilliseconds(1));
 		}
 
@@ -59,7 +46,7 @@ namespace RT.CombTests {
 			var dt = DateTime.UtcNow;
 			var comb = Comb.Create(dt);
 			var dtDecoded = Comb.GetTimestamp(comb);
-			var delta = (dtDecoded.Ticks - dt.Ticks) / RT.Comb.Constants.TicksPerMillisecond;
+			var delta = (dtDecoded.Ticks - dt.Ticks) / 10000;
 			Assert.InRange(delta, -ClockDriftAllowedMs, ClockDriftAllowedMs);
 		}
 
@@ -72,69 +59,63 @@ namespace RT.CombTests {
 
 		/// <summary>
 		/// Ensure that SQL Server will sort our COMB values in date/time order, without regard for
-		/// the other (random) bytes. To test this, we cast out Guid values as SqlGuid, which has a
-		/// comparison method that sorts the same way as MSSQL. Note that comb1 has all bits set to
-		/// 1 other than the ones from our DateTime value, and comb2 has all bits set to 0 other than
-		/// our other, slightly more recent DateTime value. Thus, if the result shows that comb1 is
-		/// less than comb2, the DateTime values are being sorted before any of the other bits (this
-		/// is the expected outcome).
+		/// the other bytes. To test this, we cast out Guid values as SqlGuid, which has a comparison
+		/// logic as MSSQL. Note that comb1 is maxed out other than in the timestamp bits, and comb2
+		/// is zeroed out other than the timestamp. Thus, if the result shows that comb1 is less than
+		/// comb2, the DateTime values are being sorted before any of the other bits (as expected).
 		/// </summary>
-		/*
 		[Fact]
 		public void TestIfSqlStyleSortsProperly() {
 			var g1 = MaxGuid();
 			var g2 = Guid.Empty;
 			// Inject the dates
-			System.Data.SqlTypes.SqlGuid comb1 = SqlCombs.Create(g1, new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-			System.Data.SqlTypes.SqlGuid comb2 = SqlCombs.Create(g2, new DateTime(2000, 1, 1, 0, 0, 1, DateTimeKind.Utc));
-			// Now they sort the opposite way as they would have without the dates
-			Assert.True((bool)(comb1 < comb2));
+			var d = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+			System.Data.SqlTypes.SqlGuid comb1 = SqlCombs.Create(g1, d);
+			System.Data.SqlTypes.SqlGuid comb2 = SqlCombs.Create(g2, d.AddMilliseconds(10));
+			//Console.WriteLine(comb1.ToString());
+			//Console.WriteLine(comb2.ToString());
+			Assert.Equal(-1, comb1.CompareTo(comb2));
 		}
 
 		/// <summary>
 		/// Ensure that SQL Server will sort our COMB values in date/time order, without regard for
-		/// the other (random) bytes. To test this, we cast out Guid values as SqlGuid, which has a
-		/// comparison method that sorts the same way as MSSQL. Note that comb1 has all bits set to
-		/// 1 other than the ones from our DateTime value, and comb2 has all bits set to 0 other than
-		/// our other, slightly more recent DateTime value. Thus, if the result shows that comb1 is
-		/// less than comb2, the DateTime values are being sorted before any of the other bits (this
-		/// is the expected outcome).
+		/// the other bytes. To test this, we cast out Guid values as SqlGuid, which has a comparison
+		/// logic as MSSQL. Note that comb1 is maxed out other than in the timestamp bits, and comb2
+		/// is zeroed out other than the timestamp. Thus, if the result shows that comb1 is less than
+		/// comb2, the DateTime values are being sorted before any of the other bits (as expected).
 		/// </summary>
 		[Fact]
 		public void TestIfHybridStyleSortsProperly() {
 			var g1 = MaxGuid();
 			var g2 = Guid.Empty;
 			// Inject the dates
-			System.Data.SqlTypes.SqlGuid comb1 = HybridCombs.Create(g1, new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
-			System.Data.SqlTypes.SqlGuid comb2 = HybridCombs.Create(g2, new DateTime(2000, 1, 1, 0, 0, 1, DateTimeKind.Utc));
-			// Now they sort the opposite way as they would have without the dates
-			Assert.True((bool)(comb1 < comb2));
+			var d = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+			System.Data.SqlTypes.SqlGuid comb1 = HybridCombs.Create(g1, d);
+			System.Data.SqlTypes.SqlGuid comb2 = HybridCombs.Create(g2, d.AddMilliseconds(1));
+			//Console.WriteLine(comb1.ToString());
+			//Console.WriteLine(comb2.ToString());
+			Assert.Equal(-1, comb1.CompareTo(comb2));
 		}
 
 		/// <summary>
 		/// Ensure that PostgreSQL will sort our COMB values in date/time order, without regard for
-		/// the other (random) bytes. To test this, we cast out Guid values as a byte array and
-		/// compare the bytes in turn, which simulates how UUID values are sorted in PostgreSQL.
-		/// Note that comb1 has all bits set to 1 other than the ones from our DateTime value, and
-		/// comb2 has all bits set to 0 other than our other, slightly more recent DateTime value.
-		/// Thus, if the result shows that comb1 is less than comb2, the DateTime values are being 
-		/// sorted before any of the other bits (this is the expected outcome).
+		/// the other bytes. To test this, we create two COMBs, 1ms apart, but with the lower time
+		/// version being maxed out in all other bits, and the higher time version being zeroed on 
+		/// all non-timestamp bits. Thus, if the result shows that comb1 is less than comb2, the 
+		/// DateTime values are being sorted before any of the other bits (as expected).
+		/// Since we don't have a PostgreSQL server handy during the actual test, we rely on the fact that
+		/// both PostgreSQL and .NET Guids sort based on the string order, not the .NET byte order.
 		/// </summary>
 		[Fact]
 		public void TestIfPostgreStyleSortsProperly() {
 			var g1 = MaxGuid();
 			var g2 = Guid.Empty;
 			// Inject the dates
-			var comb1 = PostgreCombs.Create(g1, new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc)).ToByteArray();
-			var comb2 = PostgreCombs.Create(g2, new DateTime(2000, 1, 1, 0, 0, 1, DateTimeKind.Utc)).ToByteArray();
-			// Now they sort the opposite way as they would have without the dates
-			int result = 0;
-			for(var i = 0; i < 16; i++) {
-				result = comb1[i].CompareTo(comb2[i]);
-				if(result != 0) break;
-			}
-			Assert.Equal(-1, result);
-		}*/
+			var d = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+			var comb1 = PostgreCombs.Create(g1, d);
+			var comb2 = PostgreCombs.Create(g2, d.AddMilliseconds(1));
+			Assert.Equal(-1, comb1.CompareTo(comb2));
+		}
 
 	}
 

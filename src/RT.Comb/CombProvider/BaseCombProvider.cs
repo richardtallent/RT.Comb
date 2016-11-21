@@ -17,12 +17,17 @@
 
 namespace RT.Comb {
 
-    public class CombProvider : ICombProvider {
+	// This base class handles common methods for both the SQL Server and PostgreSql implementations.
+	// Note that either implementation can be paired with either CombDateTimeStrategy.
+    public abstract class BaseCombProvider : ICombProvider {
 
-		private readonly CombProviderOptions _options = null;
+		protected ICombDateTimeStrategy _dateTimeStrategy;
 
-		public CombProvider(CombProviderOptions options) {
-			_options = options;
+		public BaseCombProvider(ICombDateTimeStrategy dateTimeStrategy) {
+			if(dateTimeStrategy.NumDateBytes != 4 && dateTimeStrategy.NumDateBytes != 6) {
+				throw new NotSupportedException("ICombDateTimeStrategy is limited to either 4 or 6 bytes.");
+			}
+			_dateTimeStrategy = dateTimeStrategy;
 		}
 
 		public Guid Create() => Create(NewGuid(), DateTime.UtcNow);
@@ -31,21 +36,11 @@ namespace RT.Comb {
 
 		public Guid Create(DateTime timestamp) => Create(NewGuid(), timestamp);
 
-		public Guid Create(Guid value, DateTime timestamp) {
-			var gbytes = value.ToByteArray();
-			var dbytes = _options.DateTimeStrategy.DateTimeToBytes(timestamp);
-			Array.Copy(dbytes, 0, gbytes, _options.GuidOffset, _options.DateTimeStrategy.NumDateBytes);
-			return new Guid(gbytes);
-		}
+		public abstract Guid Create(Guid value, DateTime timestamp);
 
-		public DateTime GetTimestamp(Guid comb) {
-			var gbytes = comb.ToByteArray();
-			var dbytes = new byte[_options.DateTimeStrategy.NumDateBytes];
-			Array.Copy(gbytes, _options.GuidOffset, dbytes, 0, _options.DateTimeStrategy.NumDateBytes);
-			return _options.DateTimeStrategy.BytesToDateTime(dbytes);
-		}
+		public abstract DateTime GetTimestamp(Guid comb);
 
-		private Guid NewGuid() => Guid.NewGuid();
+		protected Guid NewGuid() => Guid.NewGuid();
 
     }
 
