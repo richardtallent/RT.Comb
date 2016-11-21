@@ -15,7 +15,7 @@ Revision History
  - 1.3		2016-01-18	Major revision of interface
  - 1.4      2016-08-10  Upgrade to .NETCore 1.0, switch tests to Xunit
  - 2.0      2016-11-19	Corrected byte-order placement, reorganized for better DI, upgraded to .NETCore 1.1, downgraded to .NET 4.5.1
- - 2.1      2016-11-20  Simplified API and corrected/tested byte order for PostgreSql, more README rewrites
+ - 2.1      2016-11-20  Simplified API and corrected/tested byte order for PostgreSql, more README rewrites, git commit issue
 
 Background
 ==========
