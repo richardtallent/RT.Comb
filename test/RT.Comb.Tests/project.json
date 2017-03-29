@@ -1,19 +1,19 @@
 {
-  "version": "2.1.0-*",
+  "version": "2.2.0-*",
   "title": "RT.Comb.Tests",
   "buildOptions": {
     "debugType": "portable"
   },
   "dependencies": {
-    "xunit": "2.2.0-beta4-build3444",
-    "dotnet-test-xunit": "2.2.0-beta4-build3444",
+    "xunit": "2.2.0",
+    "dotnet-test-xunit": "2.2.0-preview2-build1029",
     "RT.Comb": { "target": "project" },
     "System.Data.SqlClient": "4.3.0"
   },
   "testRunner": "xunit",
   "include": "*.cs",
   "frameworks": {
-    "netcoreapp1.0": {
+    "netcoreapp1.1": {
       "dependencies": {
         "Microsoft.NETCore.App": {
           "type": "platform",

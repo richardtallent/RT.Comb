@@ -1,6 +1,6 @@
 ﻿using System;
 /*
-	Copyright 2015-2016 Richard S. Tallent, II
+	Copyright 2015-2017 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -17,6 +17,13 @@
 
 namespace RT.Comb {
 
+	// Not worth its own file. Allows overriding how the random portion of Guids are created, in case
+	// someone wants to use a different algorithm than Guid.NewGuid() or wants to decorate it before
+	// the timestamp embedding (such as overriding another portion of the random bytes for some another
+	// purpose).
+	public delegate Guid GuidProvider();
+
+
 	// This base class handles common methods for both the SQL Server and PostgreSql implementations.
 	// Note that either implementation can be paired with either CombDateTimeStrategy.
     public abstract class BaseCombProvider : ICombProvider {
@@ -30,17 +37,22 @@ namespace RT.Comb {
 			_dateTimeStrategy = dateTimeStrategy;
 		}
 
-		public Guid Create() => Create(NewGuid(), DateTime.UtcNow);
+		public abstract DateTime GetTimestamp(Guid comb);
 
-		public Guid Create(Guid value) => Create(value, DateTime.UtcNow);
+		public Guid Create() => Create(GuidProvider.Invoke(), TimestampProvider.Invoke());
 
-		public Guid Create(DateTime timestamp) => Create(NewGuid(), timestamp);
+		public Guid Create(Guid value) => Create(value, TimestampProvider.Invoke());
+
+		public Guid Create(DateTime timestamp) => Create(GuidProvider.Invoke(), timestamp);
 
 		public abstract Guid Create(Guid value, DateTime timestamp);
 
-		public abstract DateTime GetTimestamp(Guid comb);
+		// Default timestamp is UtcNow, but that's a property, wrap it as a function to meet the delegate spec
+		protected static DateTime DefaultTimestampProvider() => DateTime.UtcNow;
 
-		protected Guid NewGuid() => Guid.NewGuid();
+		public TimestampProvider TimestampProvider { get; set; } = DefaultTimestampProvider;
+
+		public GuidProvider GuidProvider { get; set; } = Guid.NewGuid;
 
     }
 

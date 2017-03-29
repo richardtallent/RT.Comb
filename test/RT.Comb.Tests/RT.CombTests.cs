@@ -6,6 +6,9 @@ namespace RT.CombTests {
 
 	public class MainTests {
 
+		private static UtcNoRepeatTimestampProvider NoDupeProvider = new UtcNoRepeatTimestampProvider();
+
+		private ICombProvider SqlNoRepeatCombs = new SqlCombProvider(new SqlDateTimeStrategy()) { TimestampProvider = NoDupeProvider.GetTimestamp };
 		private ICombProvider SqlCombs = new SqlCombProvider(new SqlDateTimeStrategy());
 		private ICombProvider PostgreCombs = new PostgreSqlCombProvider(new UnixDateTimeStrategy());
 		private ICombProvider HybridCombs = new SqlCombProvider(new UnixDateTimeStrategy());
@@ -115,6 +118,29 @@ namespace RT.CombTests {
 			var comb1 = PostgreCombs.Create(g1, d);
 			var comb2 = PostgreCombs.Create(g2, d.AddMilliseconds(1));
 			Assert.Equal(-1, comb1.CompareTo(comb2));
+		}
+
+		/// <summary>
+		/// Ensure that the UtcNoRepeatTimestampProvider will not generate COMBs with the same or
+		/// out of order timestamps. Uses SqlDateTimeStrategy because it has the lowest resolution
+		/// and thus the highest potential for a collision.
+		/// </summary>
+		[Fact]
+		public void TestUtcNoRepeatTimestampProvider() {
+			var g1 = SqlNoRepeatCombs.Create();
+			var dt1 = SqlNoRepeatCombs.GetTimestamp(g1);
+			var inSequenceCount = 0;
+			for(var i = 0; i < 1000; i++) {
+				var g2 = SqlNoRepeatCombs.Create();
+				var dt2 = SqlNoRepeatCombs.GetTimestamp(g2);
+				if(dt2 > dt1) {
+					inSequenceCount++;
+				} else {
+					Console.WriteLine($"{dt1:MM/dd/yyyy hh:mm:ss.fff} > {dt2:MM/dd/yyyy hh:mm:ss.fff}");
+				}
+				dt1 = dt2;
+			}
+			Assert.Equal(1000, inSequenceCount);
 		}
 
 	}

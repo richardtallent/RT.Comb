@@ -15,7 +15,7 @@
 	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-namespace RT {
+namespace RT.Comb {
 
 	/// <summary>
 	/// An interface for working with COMB GUIDs, implemented for both variants.
@@ -48,6 +48,12 @@ namespace RT {
 		/// <param name="value">COMB GUID</param>
 		/// <returns>DateTime embedded in <paramref name="value"/></returns>
 		DateTime GetTimestamp(Guid value);
+
+		/// <summary>
+		/// Provides the timestamp value for Create() calls that don't include a timestamp argument.
+		/// </summary>
+		TimestampProvider TimestampProvider { get; set; }
+		GuidProvider GuidProvider { get; set; }
 
 	}
 

@@ -1,7 +1,7 @@
 {
   "name": "RT.Comb",
-  "version": "2.1.0",
-  "copyright": "Copyright 2015-2016 Richard S. Tallent",
+  "version": "2.2.0",
+  "copyright": "Copyright 2015-2017 Richard S. Tallent",
   "title": "RT.Comb",
   "authors": [
     "Richard Tallent"
@@ -22,11 +22,9 @@
   },
   "frameworks": {
     "netstandard1.1": {
-      "dependencies": { "NETStandard.Library":"1.1.0"}
+      "dependencies": { "NETStandard.Library":"1.6.0"}
     },
     "net451": {}
   },
   "include": "*.cs",
-  "dependencies": {
-  }
 }
