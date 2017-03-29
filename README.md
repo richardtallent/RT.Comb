@@ -146,12 +146,12 @@ I've provided a workaround for this, in the form of an optional delegate you can
 
 When you ask `UtcNoRepeatTimestampProvider` for a timestamp, it checks to ensure that the current time is at least `IncrementMs` milliseconds more recent than the previous value it generated. If not, it returns the previous value plus `IncrementMs` instead. Either way, it then keeps track of what it returned for the next round. This checking is thread-safe. By default, `IncrementMs` is set to 4ms, which is sufficient to ensure that `SqlDateTimeStrategy` timestamp values won't collide. If you're using `UnixDateTimeStrategy`, you can optionally set this to a lower value (such as 1ms) instead. The table below shows some examples values you might get from `DateTime.UtcNow` in a tight loop vs. what `UtcNoRepeatTimestampProvider` would return:
 
-02:08:50.613    02:08:50.613
-02:08:50.613    02:08:50.617
-02:08:50.613    02:08:50.621
-02:08:50.617    02:08:50.625
-02:08:50.617    02:08:50.629
-02:08:50.617    02:08:50.632
+    02:08:50.613    02:08:50.613
+    02:08:50.613    02:08:50.617
+    02:08:50.613    02:08:50.621
+    02:08:50.617    02:08:50.625
+    02:08:50.617    02:08:50.629
+    02:08:50.617    02:08:50.632
 
 Note that you're trading a "time slip" of a few milliseconds during high insert rates for a guarantee that the `UtcNoRepeatTimestampProvider` won't repeat its timestamp, so COMBs will always sort exactly in insert order. This is fine if your transaction rate just has occasional bumps, but if you're constantly writing thousands of records per second, the time slip could accumulate into something real, especially with the 4ms default increment.
 
