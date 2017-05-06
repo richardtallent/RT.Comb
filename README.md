@@ -1,59 +1,61 @@
 Purpose
 =======
-Invented by Jimmy Nilsson and first described in an article for InformIT in 2002, a COMB is a GUID with an embedded date/time value, making the values sequential over time.
-
-This library is designed to create "COMB" `Guid` values in C#, and to be able to extract the `DateTime` value from an existing COMB value. I've found some random code here and there that purports to do something similar, but it either didn't support both variants of COMB (more on this later) or it was not independent enough to be grafted into my code.
-
-Status
-======
-While I've created code to do this before, this library is my attempt to clean it up, add PostgreSQL support, and make it available as open source. Suggestions welcome.
-
-Revision History
-================
- - 1.1		2016-01		First release
- - 1.2		2016-01		Clean up, add unit tests
- - 1.3		2016-01-18	Major revision of interface
- - 1.4      2016-08-10  Upgrade to .NETCore 1.0, switch tests to Xunit
- - 2.0      2016-11-19	Corrected byte-order placement, reorganized for better DI, upgraded to .NETCore 1.1, downgraded to .NET 4.5.1
- - 2.1      2016-11-20  Simplified API and corrected/tested byte order for PostgreSql, more README rewrites, git commit issue
- - 2.2      2017-03-28  Fixed namespace for ICombProvider, adjusted the interface to allow overriding how the default timestamp and Guid are obtained. Created TimestampProvider implementation that forces unique, increasing timestamps (for its instance) as a solution for #5.
- - 2.2.1    2017-04-02  Converted to `.csproj`. Now targeting .NET Standard 1.2.
+This small .NET Core library does two things: 
+1. generates "COMB" `Guid` values in C#; and,
+2. allows you to extract the `DateTime` value from an existing COMB `Guid`.
 
 Background
 ==========
-When GUIDs (`uniqueidentifier` values in MSSQL parlance, `UUID` in PostgreSQL) are part of a database index, the randomness of new values can result in reduced performance, as insertions can fragment the index (or, for a clustered index, the table). In SQL Server 2005, Microsoft provided the `NEWSEQUENTIALID()` function to alleviate this issue, but despite the name, generated GUID values from that function are still not guaranteed to be sequential over time, nor do multiple instances of MSSQL produce values that would be sequential in relationship to one another.
+When GUIDs (`uniqueidentifier` values in MSSQL parlance, `UUID` in PostgreSQL) are part of a database index, and particularly when they are part of the clustered index, the randomness of new values can reduce performance of inserting new values.
 
-The COMB method, however, takes advantage of the database's native sort ordering for GUID values and replaces the bytes that are sorted first with a date/time value, so values generated at the same time will always be generated in a *nearly* sequential order, regardless of server reboots or values generated on different machines (to the degree, of course, that the system clocks are synchronized).
+In SQL Server 2005, Microsoft provided the `NEWSEQUENTIALID()` function to alleviate this issue, but despite the name, generated GUID values from that function are still not guaranteed to be sequential over time (rebooting impacts the sequence, for exmaple), nor do multiple instances of MSSQL produce values that would be sequential in relationship to one another.
 
-As a side benefit, the COMB's sequential portion has the semantic value of being the date and time of insert, which can be useful from time to time.
-
-While this does not alleviate all potential worries when deciding to use GUID fields in a table (they are still rather large, and can be unfriendly if exposed to end users), it does make them more palatable when they are called for.
+But back in 2002, in an article for InformIT, Jimmy Nilsson described the "COMB" technique, which replaces the portion of a GUID that is sorted first with a timestamp value. This guarantees (within the precision of the system clock) that values will be sequential, even when the code runs on different machines. As a side benefit, the COMB's timestamp can be easily extracted, which can be useful from time to time if your table has no other field tracking the insertion date/time.
 
 Using this Library
 ====================
-A NuGet package is available, dual-targeted for .NET Core 1.1 and Microsoft.NET 4.5.1:
+A NuGet package is available, targeted for .NET Standard 1.2 (.NET Core 1.0 or .NET 4.5.1):
+
 https://www.nuget.org/packages/RT.Comb/
 
-Everything is within the `RT.Comb` namespace.
+Here's a quick starter console application. Given no arguments, it generates a COMB. If a COMB is provided, it extracts and displays the timestamp:
+
+```C#
+using System;
+using RT.Comb;
+
+class CombMaker {
+    public static void Main(string[] args) {
+        ICombProvider myCombProvider = new SqlCombProvider(new SqlDateTimeStrategy());
+        if(args.Length == 0) {
+            Console.WriteLine(myCombProvider.Create());
+            return;
+        }
+        Guid g;
+        if(!Guid.TryParse(args[0], out g)) {
+            throw new ArgumentException("GUID provided not valid.");
+        }
+        Console.WriteLine(myCombProvider.GetTimestamp(g));
+    }
+}
+```
 
 The `ICombProvider` interface defines a `Create()` function (with several signature variants) to return new COMB `Guid` values, and a `GetTimestamp()` function to return the embedded `DateTime` within an existing COMB `Guid` value.
 
 Two implementations of `ICombProvider` are provided:
 
-- `SqlCombProvider`: This creates and decodes COMBs in GUIDs that are compatible with the way Microsoft SQL Server sorts `uniqueidentifier` values -- i.e., starting at the 11th byte.
-- `PostgreSqlCombProvider`: This creates and decodes COMBs in GUIDs that are compatible with the way PostegreSQL sorts `uuid` values -- i.e., starting with the first byte shown in string representations of a `Guid`.
+- `SqlCombProvider`: This creates and decodes COMBs in GUIDs that are compatible with the way Microsoft SQL Server sorts `uniqueidentifier` values -- *i.e.*, starting at the 11th byte.
+- `PostgreSqlCombProvider`: This creates and decodes COMBs in GUIDs that are compatible with the way PostegreSQL sorts `uuid` values -- *i.e.*, starting with the first byte shown in string representations of a `Guid`.
 
-Both of these implementations have a single constructor that takes a single argument of type `IDateTimeStrategy`, which handles the actual conversion between `System.DateTime` values and the bytes that are written into the GUIDs. Two `IDateTimeStrategy` implementations are included:
+Both of these implementations have a constructor with a single argument of type `IDateTimeStrategy`. The implementation you pass here actually performs the conversion between `System.DateTime` values and the bytes written into the GUIDs. Two `IDateTimeStrategy` implementations are included:
 
- - `SqlDateTimeStrategy` encodes the DateTime in a way that is highly compatible with Microsoft SQL Server's `datetime` data type and the original COMB implementation.
- - `UnixDateTimeStrategy` encodes the DateTime using the millisecond version of the Unix epoch timestamp.
+ - `UnixDateTimeStrategy` encodes the DateTime using the millisecond version of the Unix epoch timestamp (recommended); and,
+ - `SqlDateTimeStrategy` encodes the DateTime using SQL Server's `datetime` data structure (recommended only if you need compatibility with older COMB values generated using Nilsson's code).
 
 You can use either DateTimeStrategy with either Provider--or write your own if neither of these fits your needs.
 
-Prior to version 2.0, I used static classes with hard-coded options. With 2.0, I switched to a traditional class to provide more flexibility and to allow me to inject the preferred options as a Singleton using ASP.NET Core. The class is thread-safe.
-
-UUIDs and GUIDs
-===============
+Gory Details about UUIDs and GUIDs
+==================================
 *(For a more comprehensive treatment, see Wikipedia.)*
 
 Standard UUIDs/GUIDs are 128-bit (16-byte) values, wherein most of those bits hold a random value. When viewed as a string, the bytes are represented in hex in five groups, separated by hyphens:
@@ -64,7 +66,7 @@ Standard UUIDs/GUIDs are 128-bit (16-byte) values, wherein most of those bits ho
 
 Structurally, this breaks down into one 32-bit unsigned integer (`Data1`), two 16-bit unsigned integers (`Data2`, `Data3`), and 8 bytes (`Data4`). The most significant nybble of Data3 (the 7th byte in string order, 8th in the internal bytes of `System.Guid`) is the GUID "version" number--generally 4 (0100b). Also, the most significant 2-3 bits of the first byte of Data4 is the "variant" value. For common GUIDs, the first two of these bits will be `10`, and the third is random. The remaining bits for a version 4 GUID are random.
 
-The UUID standard (RFC 4122) specifies that the `Data1`, `Data2`, and `Data3` integers are stored and shown in *network byte order* (a.k.a. "big endian" or most significant byte first). However, while Microsoft's GUID implementation *shows and sorts* the values as if they were in big endian form, internally it stores the bytes for these values in the native form for the processor (which, on x86, means little endian).
+The UUID standard (RFC 4122) specifies that the `Data1`, `Data2`, and `Data3` integers are stored and shown in *network byte order* ("big endian" or most significant byte first). However, while Microsoft's GUID implementation *shows and sorts* the values as if they were in big endian form, internally it stores the bytes for these values in the native form for the processor (which, on x86, means little endian).
 
 This means that the bytes you get from `Guid.ToString()` are actually stored in the GUID's internal byte array in the following order:
 
@@ -77,6 +79,10 @@ https://github.com/npgsql/npgsql/blob/4ef74fa78cffbb4b1fdac00601d0ee5bff5e242b/s
 IDateTimeStrategy
 =================
 `IDateTimeStrategy` implementations are responsible for returning a byte array, most significant byte first, representing the timestamp. This byte order is independent of whatever swapping we might have to do to embed the value in a GUID at a certain index. They can return either 4 or 6 bytes, both built-in implementations use 6 bytes.
+
+UnixDateTimeStrategy
+--------------------
+This implementation was inspired by work done on the Marten project, which uses a modified version of RT.Comb. This also returns 6 bytes, but as a 48-bit unsigned integer representing the number of *milliseconds* since the UNIX epoch date (1970-01-01). Since this method is far more space-efficient than the MSSQL `datetime` structure, it will cover you well into the 85th Century. This is the recommended implementation.
 
 SqlDateTimeStrategy
 -------------------
@@ -93,10 +99,6 @@ Creating a COMB `uniqueidentifier` in T-SQL with the current date and time:
 Extracting a `datetime` value from a COMB `uniqueidentifier` created using the above T-SQL:
 
 	CAST(SUBSTRING(CAST(0 AS binary(2)) + CAST(value AS binary(16), 10, 6) AS datetime)
-
-UnixDateTimeStrategy
---------------------
-This implementation was inspired by work done on the Marten project, which uses a modified version of RT.Comb. This also returns 6 bytes, but as a 48-bit unsigned integer representing the number of *milliseconds* since the UNIX epoch date (1970-01-01). Since this method is far more space-efficient than the MSSQL `datetime` structure, it will cover you well into the 85th Century. This is the recommended implementation for use with PostgreSQL, or with SQL Server if you aren't concerned with precise T-SQL based conversions to SQL `datetime` values.
 
 ICombProvider
 =============
@@ -133,19 +135,23 @@ For PostgreSQL, the *first* bytes are sorted first, so those are the ones we wan
 
 Recall that `System.Guid` stores its bytes for `Data1` and `Data2` in a different order than they are shown, so we have to reverse the bytes we're putting into those areas so they are stored and sorted in PostgreSQL in network byte order.
 
-**This is a breaking change from RT.Comb version 1.4.** In prior versions, I wasn't actually able to test on PostgreSQL and got this all wrong, along with misplacing where the version nybble was and doing unnecessary bit-gymbastics to avoid overwriting it. My error was kindly pointed out by Barry Hagan and has been fixed.
+**This is a breaking change for RT.Comb v.1.4.** In prior versions, I wasn't actually able to test on PostgreSQL and got this all wrong, along with misplacing where the version nybble was and doing unnecessary bit-gymnastics to avoid overwriting it. My error was kindly pointed out by Barry Hagan and has been fixed.
+
+Note about entropy
+------------------
+The default implementations overwrite 48 bits of random data with the timestamp, and another 6 bits are also pre-determined (the verion and variant). This still leaves 74 random bits per unit of time (1/300th of a second for SqlDateTimeStrategy, 1/1000th of a second for UnixDateTimeStrategy). This provides well beyond a reasonable amount of protection against collision.
 
 TimestampProvider / GuidProvider
 ================================
-By default, SqlCombProvider and PostgreSqlCombProvider uses `DateTime.UtcNow` when a timestamp argument is not provided for `Create()`. If you want the convenience of using `Create` with fewer arguments but need to choose the timestamp another way, you can set the `TimestampProvider` delegate to a parameterless function that returns a `DateTime` value. Another delegate, `GuidProvider`, provides the same functionality for overriding how the base GUID is created.
+By default, SqlCombProvider and PostgreSqlCombProvider use `DateTime.UtcNow` when a timestamp argument is not provided for `Create()`. If you want the convenience of using `Create` with fewer arguments but need to choose the timestamp another way, you can set the `TimestampProvider` delegate to a parameter-less function that returns a `DateTime` value. Another delegate, `GuidProvider`, provides the same functionality for overriding how the base GUID is created.
 
 UtcNoRepeatTimestampProvider
-============================
-The DateTime strategies described above are limited to 1-3ms resolution, which means if you create many COMB values per second, there is a chance you'll create two during the same resolution window. If, then, the remaining random bits of the GUIDs are lower in sort priority in the newer one (50/50 chance), the GUIDs will sort out of order. **This is expected behavior**. As with any timestamp-based field, COMBs are not guaranteed to be sequential once you're inserting records faster than the stored clock resolution. Also, on Windows platforms, the system timer only has a resolution of 15.625ms, which amplifies this problem. So, in general, don't rely on COMBs to have values that sort in *exactly* the same order as they were inserted.
+----------------------------
+The DateTime strategies described above are limited to 1-3ms resolution, which means if you create many COMB values per second, there is a chance you'll create two with the same timestamp value.
 
-I've provided a workaround for this, in the form of an optional delegate you can use to override the `TimestampProvider` described above. To use it, create a new instance of `UtcNoRepeatTimestampProvider` and set your `ICombProvider.TimestampProvider` to `UtcNoRepeatTimestampProvider.GetTimestamp`.
+This won't result in a database collision--the remaining random bits in the GUID protect you there. But COMBs with exactly the same timestamp value aren't *guaranteed* to sort in order of insertion, because once the timestamp bytes are sorted, the sort order will rely on the random bytes after that. **This is expected behavior**. As with any timestamp-based field, COMBs are not guaranteed to be sequential once you're inserting records faster than the stored clock resolution. Also, on Windows platforms, the system timer only has a resolution of 15.625ms, which amplifies this problem. So, in general, don't rely on COMBs to have values that sort in *exactly* the same order as they were inserted.
 
-When you ask `UtcNoRepeatTimestampProvider` for a timestamp, it checks to ensure that the current time is at least `IncrementMs` milliseconds more recent than the previous value it generated. If not, it returns the previous value plus `IncrementMs` instead. Either way, it then keeps track of what it returned for the next round. This checking is thread-safe. By default, `IncrementMs` is set to 4ms, which is sufficient to ensure that `SqlDateTimeStrategy` timestamp values won't collide. If you're using `UnixDateTimeStrategy`, you can optionally set this to a lower value (such as 1ms) instead. The table below shows some examples values you might get from `DateTime.UtcNow` in a tight loop vs. what `UtcNoRepeatTimestampProvider` would return:
+If your sort order must be guaranteed, I've come up with a workaround -- a `TimestampProvider` delegate called `UtcNoRepeatTimestampProvider.GetTimestamp`. This method checks to ensure that the current time is at least `IncrementMs` milliseconds more recent than the previous value it generated. If not, it returns the previous value plus `IncrementMs` instead. Either way, it then keeps track of what it returned for the next round. This checking is thread-safe. By default, `IncrementMs` is set to 4ms, which is sufficient to ensure that `SqlDateTimeStrategy` timestamp values won't collide (which has a ~3ms resolution). If you're using `UnixDateTimeStrategy`, you can optionally set this to a lower value (such as 1ms) instead. The table below shows some examples values you might get from `DateTime.UtcNow` in a tight loop vs. what `UtcNoRepeatTimestampProvider` would return:
 
     02:08:50.613    02:08:50.613
     02:08:50.613    02:08:50.617
@@ -156,17 +162,13 @@ When you ask `UtcNoRepeatTimestampProvider` for a timestamp, it checks to ensure
 
 Note that you're trading a "time slip" of a few milliseconds during high insert rates for a guarantee that the `UtcNoRepeatTimestampProvider` won't repeat its timestamp, so COMBs will always sort exactly in insert order. This is fine if your transaction rate just has occasional bumps, but if you're constantly writing thousands of records per second, the time slip could accumulate into something real, especially with the 4ms default increment.
 
-Note about entropy
-------------------
-The default implementations overwrite 48 bits of random data with the timestamp, and another 6 bits are also pre-determined (the verion and variant). This still leaves 74 random bits per unit of time (1/300th of a second for SqlDateTimeStrategy, 1/1000th of a second for UnixDateTimeStrategy). This provides well beyond a reasonable amount of protection against collision.
-
 How To Contribute
 =================
 Some missing pieces:
 - More unit tests.
 - Please keep all contributions compatible with .NET Core.
 - Please use the same style (tabs, same-line opening braces, compact line spacing, etc.)
-- Please keep project/solution files compatible with Visual Studio 2015 Community Edition and Visual Studio Code.
+- Please keep project/solution files compatible with Visual Studio Code.
 
 Security and Performance
 ========================
@@ -181,6 +183,19 @@ Security and Performance
 (5) The best use for a COMB is where (a) you want the range and randomness of the GUID structure without index splits under load, and (b) any actual use of the embedded timestamp is incidental (for example, for debugging purposes).
 
 (6) As described under `UtcNoRepeatTimestampProvider`, timestamps are only as precise as the timer resolution, so unless you use the aforementioned functionality to work around this, COMBs generated within the same timestamp period are not guaranteed to sort in the order of generation.
+
+Revision History
+================
+ - 1.1.0	2016-01		First release
+ - 1.2.0	2016-01		Clean up, add unit tests, published on NuGet
+ - 1.3.0    2016-01-18	Major revision of interface
+ - 1.4.0    2016-08-10  Upgrade to .NETCore 1.0, switch tests to Xunit
+ - 1.4.1    2016-09-16  Bug fix
+ - 1.4.2    2016-09-16  Fix build issue
+ - 2.0.0    2016-11-19	Corrected byte-order placement, upgraded to .NETCore 1.1, downgraded to .NET 4.5.1. Switched from static classes to instance-based, allowing me to create a singleton with injected options for ASP.NET Core.
+ - 2.1.0    2016-11-20  Simplified API and corrected/tested byte order for PostgreSql, more README rewrites, git commit issue
+ - 2.2.0    2017-03-28  Fixed namespace for ICombProvider, adjusted the interface to allow overriding how the default timestamp and Guid are obtained. Created TimestampProvider implementation that forces unique, increasing timestamps (for its instance) as a solution for #5.
+ - 2.2.1    2017-04-02  Converted to `.csproj`. Now targeting .NET Standard 1.2. Not packaged for NuGet.
 
 More Information
 =================================
