@@ -8,10 +8,7 @@ namespace RT.CombTests {
 
 		private static UtcNoRepeatTimestampProvider NoDupeProvider = new UtcNoRepeatTimestampProvider();
 
-		private ICombProvider SqlNoRepeatCombs = new SqlCombProvider(new SqlDateTimeStrategy()) { TimestampProvider = NoDupeProvider.GetTimestamp };
-		private ICombProvider SqlCombs = new SqlCombProvider(new SqlDateTimeStrategy());
-		private ICombProvider PostgreCombs = new PostgreSqlCombProvider(new UnixDateTimeStrategy());
-		private ICombProvider HybridCombs = new SqlCombProvider(new UnixDateTimeStrategy());
+		private ICombProvider SqlNoRepeatCombs = new SqlCombProvider(new SqlDateTimeStrategy(), customTimestampProvider: NoDupeProvider.GetTimestamp);
 		private UnixDateTimeStrategy UnixStrategy = new UnixDateTimeStrategy();
 
 		/// <summary>
@@ -20,13 +17,13 @@ namespace RT.CombTests {
 		/// never be off by more than 4ms.
 		/// </summary>
 		[Fact]
-		public void TestIfSqlStyleReversible() => IsReversible(SqlCombs, 4);
+		public void TestIfSqlStyleReversible() => IsReversible(Provider.Legacy, 4);
 
 		[Fact]
-		public void TestIfPostgreStyleReversible() => IsReversible(PostgreCombs, 0);
+		public void TestIfPostgreStyleReversible() => IsReversible(Provider.PostgreSql, 0);
 
 		[Fact]
-		public void TestIfHybridStyleReversible() => IsReversible(HybridCombs, 0);
+		public void TestIfHybridStyleReversible() => IsReversible(Provider.Sql, 0);
 
 		[Fact]
 		public void TestDateTimeToMs() {
@@ -73,10 +70,8 @@ namespace RT.CombTests {
 			var g2 = Guid.Empty;
 			// Inject the dates
 			var d = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-			System.Data.SqlTypes.SqlGuid comb1 = SqlCombs.Create(g1, d);
-			System.Data.SqlTypes.SqlGuid comb2 = SqlCombs.Create(g2, d.AddMilliseconds(10));
-			//Console.WriteLine(comb1.ToString());
-			//Console.WriteLine(comb2.ToString());
+			System.Data.SqlTypes.SqlGuid comb1 = Provider.Legacy.Create(g1, d);
+			System.Data.SqlTypes.SqlGuid comb2 = Provider.Legacy.Create(g2, d.AddMilliseconds(10));
 			Assert.Equal(-1, comb1.CompareTo(comb2));
 		}
 
@@ -93,10 +88,8 @@ namespace RT.CombTests {
 			var g2 = Guid.Empty;
 			// Inject the dates
 			var d = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-			System.Data.SqlTypes.SqlGuid comb1 = HybridCombs.Create(g1, d);
-			System.Data.SqlTypes.SqlGuid comb2 = HybridCombs.Create(g2, d.AddMilliseconds(1));
-			//Console.WriteLine(comb1.ToString());
-			//Console.WriteLine(comb2.ToString());
+			System.Data.SqlTypes.SqlGuid comb1 = Provider.Sql.Create(g1, d);
+			System.Data.SqlTypes.SqlGuid comb2 = Provider.Sql.Create(g2, d.AddMilliseconds(1));
 			Assert.Equal(-1, comb1.CompareTo(comb2));
 		}
 
@@ -115,8 +108,8 @@ namespace RT.CombTests {
 			var g2 = Guid.Empty;
 			// Inject the dates
 			var d = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-			var comb1 = PostgreCombs.Create(g1, d);
-			var comb2 = PostgreCombs.Create(g2, d.AddMilliseconds(1));
+			var comb1 = Provider.PostgreSql.Create(g1, d);
+			var comb2 = Provider.PostgreSql.Create(g2, d.AddMilliseconds(1));
 			Assert.Equal(-1, comb1.CompareTo(comb2));
 		}
 

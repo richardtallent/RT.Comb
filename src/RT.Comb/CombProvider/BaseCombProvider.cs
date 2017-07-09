@@ -30,11 +30,13 @@ namespace RT.Comb {
 
 		protected ICombDateTimeStrategy _dateTimeStrategy;
 
-		public BaseCombProvider(ICombDateTimeStrategy dateTimeStrategy) {
+		public BaseCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider customTimestampProvider = null, GuidProvider customGuidProvider = null) {
 			if(dateTimeStrategy.NumDateBytes != 4 && dateTimeStrategy.NumDateBytes != 6) {
 				throw new NotSupportedException("ICombDateTimeStrategy is limited to either 4 or 6 bytes.");
 			}
 			_dateTimeStrategy = dateTimeStrategy;
+			this.TimestampProvider = customTimestampProvider ?? DefaultTimestampProvider;
+			this.GuidProvider = customGuidProvider ?? Guid.NewGuid;
 		}
 
 		public abstract DateTime GetTimestamp(Guid comb);
@@ -50,9 +52,9 @@ namespace RT.Comb {
 		// Default timestamp is UtcNow, but that's a property, wrap it as a function to meet the delegate spec
 		protected static DateTime DefaultTimestampProvider() => DateTime.UtcNow;
 
-		public TimestampProvider TimestampProvider { get; set; } = DefaultTimestampProvider;
+		public TimestampProvider TimestampProvider { get; private set; } = DefaultTimestampProvider;
 
-		public GuidProvider GuidProvider { get; set; } = Guid.NewGuid;
+		public GuidProvider GuidProvider { get; private set; } = Guid.NewGuid;
 
     }
 

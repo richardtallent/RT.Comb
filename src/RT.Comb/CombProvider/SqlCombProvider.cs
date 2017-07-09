@@ -21,7 +21,7 @@ namespace RT.Comb {
 
 		private const int EmbedAtIndex = 10;
 
-		public SqlCombProvider(ICombDateTimeStrategy dateTimeStrategy) : base(dateTimeStrategy) {}
+		public SqlCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider customTimestampProvider = null, GuidProvider customGuidProvider = null) : base(dateTimeStrategy, customTimestampProvider, customGuidProvider) {}
 
 		public override Guid Create(Guid value, DateTime timestamp) {
 			var gbytes = value.ToByteArray();

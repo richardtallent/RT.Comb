@@ -19,7 +19,7 @@ namespace RT.Comb {
 
     public class PostgreSqlCombProvider : BaseCombProvider {
 
-		public PostgreSqlCombProvider(ICombDateTimeStrategy dateTimeStrategy) : base(dateTimeStrategy) {}
+		public PostgreSqlCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider customTimestampProvider = null, GuidProvider customGuidProvider = null) : base(dateTimeStrategy, customTimestampProvider, customGuidProvider) {}
 
 		public override Guid Create(Guid value, DateTime timestamp) {
 			var gbytes = value.ToByteArray();

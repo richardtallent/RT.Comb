@@ -10,15 +10,28 @@ When GUIDs (`uniqueidentifier` values in MSSQL parlance, `UUID` in PostgreSQL) a
 
 In SQL Server 2005, Microsoft provided the `NEWSEQUENTIALID()` function to alleviate this issue, but despite the name, generated GUID values from that function are still not guaranteed to be sequential over time (rebooting impacts the sequence, for exmaple), nor do multiple instances of MSSQL produce values that would be sequential in relationship to one another.
 
-But back in 2002, in an article for InformIT, Jimmy Nilsson described the "COMB" technique, which replaces the portion of a GUID that is sorted first with a timestamp value. This guarantees (within the precision of the system clock) that values will be sequential, even when the code runs on different machines. As a side benefit, the COMB's timestamp can be easily extracted, which can be useful from time to time if your table has no other field tracking the insertion date/time.
+But back in 2002, in an article for InformIT, Jimmy Nilsson described the "COMB" technique, which replaces the portion of a GUID that is sorted first with a date/time value. This guarantees (within the precision of the system clock) that values will be sequential, even when the code runs on different machines. As a side benefit, the COMB's timestamp can be easily extracted, which can be useful from time to time if your table has no other field tracking the insertion date/time.
 
-Using this Library
-====================
+This library implements several modern variations, as well as the original technique.
+
+Simple Usage
+============
 A NuGet package is available, targeted for .NET Standard 1.2 (.NET Core 1.0 or .NET 4.5.1):
 
 https://www.nuget.org/packages/RT.Comb/
 
-Here's a quick starter console application. Given no arguments, it generates a COMB. If a COMB is provided, it extracts and displays the timestamp:
+Three static implementations are provided, each with a different strategy for generating the timestamp and inserting it into the GUID.
+
+- `RT.Comb.Provider.Legacy`: The original technique. Only recommended you need to support existing COMB values created using this technique.
+- `RT.Comb.Provider.Sql`: This is the recommended technique for COMBs stored in Microsoft SQL Server.
+- `RT.Comb.Provider.Postgre`: This is the recommended technique for COMBs stored in PostgreSQL.
+
+Each of these has only **two public methods**:
+
+- `Create()` returns a COMB GUID. You can *optionally* pass your own baseline GUID and/or timestamp to embed.
+- `GetTimestamp()` returns the timestamp embedded in a previously-created COMB GUID.
+
+Here's a sample console application using the "Sql" version above. Given no arguments, it generates a COMB. If a COMB is provided, it extracts and displays the timestamp:
 
 ```C#
 using System;
@@ -26,33 +39,34 @@ using RT.Comb;
 
 class CombMaker {
     public static void Main(string[] args) {
-        ICombProvider myCombProvider = new SqlCombProvider(new SqlDateTimeStrategy());
         if(args.Length == 0) {
-            Console.WriteLine(myCombProvider.Create());
+            Console.WriteLine(Provider.Sql.Create());
             return;
         }
         Guid g;
         if(!Guid.TryParse(args[0], out g)) {
-            throw new ArgumentException("GUID provided not valid.");
+            throw new ArgumentException("Invalid GUID.");
         }
-        Console.WriteLine(myCombProvider.GetTimestamp(g));
+        Console.WriteLine(Provider.Sql.GetTimestamp(g));
     }
 }
 ```
 
-The `ICombProvider` interface defines a `Create()` function (with several signature variants) to return new COMB `Guid` values, and a `GetTimestamp()` function to return the embedded `DateTime` within an existing COMB `Guid` value.
+Advanced Usage
+==============
+If the default implementations don't work for you, you can roll your own, either changing up how the timestamp is determined, or changing how it is inserted into the GUID.
 
-Two implementations of `ICombProvider` are provided:
+There are two core interfaces: `ICombProvider`, responsible for embedding and extracting timestamps (described above under Simple Usage), and `DateTimeStrategy`, responsible for encoding timestamp values to bytes and vice versa.
 
+There are two included implementations of `ICombProvider`:
 - `SqlCombProvider`: This creates and decodes COMBs in GUIDs that are compatible with the way Microsoft SQL Server sorts `uniqueidentifier` values -- *i.e.*, starting at the 11th byte.
 - `PostgreSqlCombProvider`: This creates and decodes COMBs in GUIDs that are compatible with the way PostegreSQL sorts `uuid` values -- *i.e.*, starting with the first byte shown in string representations of a `Guid`.
 
-Both of these implementations have a constructor with a single argument of type `IDateTimeStrategy`. The implementation you pass here actually performs the conversion between `System.DateTime` values and the bytes written into the GUIDs. Two `IDateTimeStrategy` implementations are included:
-
+Both take an `IDateTimeStrategy` argument in their constructor. Two strategies are included:
  - `UnixDateTimeStrategy` encodes the DateTime using the millisecond version of the Unix epoch timestamp (recommended); and,
- - `SqlDateTimeStrategy` encodes the DateTime using SQL Server's `datetime` data structure (recommended only if you need compatibility with older COMB values generated using Nilsson's code).
+ - `SqlDateTimeStrategy` encodes the DateTime using SQL Server's `datetime` data structure (only for compatibility with legacy COMB values).
 
-You can use either DateTimeStrategy with either Provider--or write your own if neither of these fits your needs.
+You can implement either of these interfaces on your own, or both, to suit your needs.
 
 Gory Details about UUIDs and GUIDs
 ==================================
@@ -72,7 +86,7 @@ This means that the bytes you get from `Guid.ToString()` are actually stored in 
 
     33221100-5544-7766-8899-AABBCCDDEEFF
 
-Npgsql reads incoming bytes for these three fields using `GetInt32()` and `GetInt16()`, which assume the bytes are in little endian form. This ensures that .NET will return the same *string* as non-.NET tools that show PostgreSQL UUID values, but the bytes inside .NET and inside PostgreSQL are stored in a different order. Reference:
+Npgsql, the standard .NET library for working with PostgreSQL databases, reads incoming bytes for these three fields using `GetInt32()` and `GetInt16()`, which assume the bytes are in little endian form. This ensures that .NET will return the same *string* as non-.NET tools that show PostgreSQL UUID values, but the bytes inside .NET and inside PostgreSQL are stored in a different order. Reference:
 
 https://github.com/npgsql/npgsql/blob/4ef74fa78cffbb4b1fdac00601d0ee5bff5e242b/src/Npgsql/TypeHandlers/UuidHandler.cs
 
@@ -162,6 +176,8 @@ If your sort order must be guaranteed, I've come up with a workaround -- a `Time
 
 Note that you're trading a "time slip" of a few milliseconds during high insert rates for a guarantee that the `UtcNoRepeatTimestampProvider` won't repeat its timestamp, so COMBs will always sort exactly in insert order. This is fine if your transaction rate just has occasional bumps, but if you're constantly writing thousands of records per second, the time slip could accumulate into something real, especially with the 4ms default increment.
 
+To use this workaround, you'll need to create your own ICombProvider instance rather than using the the built-in static instances in `RT.Comb.Provider`, and pass this delegate in the provider constructor. You can find an example of this in the test suite.
+
 How To Contribute
 =================
 Some missing pieces:
@@ -196,6 +212,7 @@ Revision History
  - 2.1.0    2016-11-20  Simplified API and corrected/tested byte order for PostgreSql, more README rewrites, git commit issue
  - 2.2.0    2017-03-28  Fixed namespace for ICombProvider, adjusted the interface to allow overriding how the default timestamp and Guid are obtained. Created TimestampProvider implementation that forces unique, increasing timestamps (for its instance) as a solution for #5.
  - 2.2.1    2017-04-02  Converted to `.csproj`. Now targeting .NET Standard 1.2. Not packaged for NuGet.
+ - 2.3.0	2017-07-09	Simplify interface w/static class, remove `TimestampProvider` and `GuidProvider` from interface and make them immutable in the concrete implementations.
 
 More Information
 =================================

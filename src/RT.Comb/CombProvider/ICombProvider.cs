@@ -52,8 +52,8 @@ namespace RT.Comb {
 		/// <summary>
 		/// Provides the timestamp value for Create() calls that don't include a timestamp argument.
 		/// </summary>
-		TimestampProvider TimestampProvider { get; set; }
-		GuidProvider GuidProvider { get; set; }
+		//TimestampProvider TimestampProvider { get; }
+		//GuidProvider GuidProvider { get; }
 
 	}
 
