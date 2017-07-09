@@ -22,7 +22,7 @@ https://www.nuget.org/packages/RT.Comb/
 
 Three static implementations are provided, each with a different strategy for generating the timestamp and inserting it into the GUID.
 
-- `RT.Comb.Provider.Legacy`: The original technique. Only recommended you need to support existing COMB values created using this technique.
+- `RT.Comb.Provider.Legacy`: The original technique. Only recommended if you need to support existing COMB values created using this technique.
 - `RT.Comb.Provider.Sql`: This is the recommended technique for COMBs stored in Microsoft SQL Server.
 - `RT.Comb.Provider.Postgre`: This is the recommended technique for COMBs stored in PostgreSQL.
 
