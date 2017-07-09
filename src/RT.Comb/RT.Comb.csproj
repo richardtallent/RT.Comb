@@ -3,7 +3,7 @@
     <Description>Library to create and use COMB (timestamped sequential) GUID variants for Microsoft SQL Server and PostgreSQL. See the GitHub site for more details.</Description>
     <Copyright>Copyright 2015-2017 Richard S. Tallent</Copyright>
     <AssemblyTitle>RT.Comb</AssemblyTitle>
-    <VersionPrefix>2.2.1</VersionPrefix>
+    <VersionPrefix>2.3.0</VersionPrefix>
     <Authors>Richard Tallent</Authors>
     <TargetFrameworks>netstandard1.2</TargetFrameworks>
     <PlatformTarget>anycpu</PlatformTarget>
