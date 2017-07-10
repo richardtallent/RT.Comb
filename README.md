@@ -31,26 +31,7 @@ Each of these has only **two public methods**:
 - `Create()` returns a COMB GUID. You can *optionally* pass your own baseline GUID and/or timestamp to embed.
 - `GetTimestamp()` returns the timestamp embedded in a previously-created COMB GUID.
 
-Here's a sample console application using the "Sql" version above. Given no arguments, it generates a COMB. If a COMB is provided, it extracts and displays the timestamp:
-
-```C#
-using System;
-using RT.Comb;
-
-class CombMaker {
-    public static void Main(string[] args) {
-        if(args.Length == 0) {
-            Console.WriteLine(Provider.Sql.Create());
-            return;
-        }
-        Guid g;
-        if(!Guid.TryParse(args[0], out g)) {
-            throw new ArgumentException("Invalid GUID.");
-        }
-        Console.WriteLine(Provider.Sql.GetTimestamp(g));
-    }
-}
-```
+An example console application using the "Sql" version is provided in the `demo` folder showing a minimal-code use of both of these methods.
 
 Advanced Usage
 ==============
