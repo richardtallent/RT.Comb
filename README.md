@@ -93,7 +93,7 @@ Creating a COMB `uniqueidentifier` in T-SQL with the current date and time:
 
 Extracting a `datetime` value from a COMB `uniqueidentifier` created using the above T-SQL:
 
-	CAST(SUBSTRING(CAST(0 AS binary(2)) + CAST(value AS binary(16), 10, 6) AS datetime)
+	CAST(CAST(0 AS binary(2)) + SUBSTRING(CAST(@value AS binary(16)), 11, 6) AS datetime)
 
 ICombProvider
 =============
