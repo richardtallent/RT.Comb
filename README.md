@@ -79,6 +79,24 @@ UnixDateTimeStrategy
 --------------------
 This implementation was inspired by work done on the Marten project, which uses a modified version of RT.Comb. This also returns 6 bytes, but as a 48-bit unsigned integer representing the number of *milliseconds* since the UNIX epoch date (1970-01-01). Since this method is far more space-efficient than the MSSQL `datetime` structure, it will cover you well into the 85th Century. This is the recommended implementation.
 
+Creating a COMB `uniqueidentifier` in T-SQL with the current date and time:
+
+    DECLARE @now DATETIME = GETUTCDATE();
+    DECLARE @daysSinceEpoch BIGINT = DATEDIFF(DAY, '1970-1-1', @now);
+    DECLARE @msLeftOver INT = DATEDIFF(MILLISECOND, DATEADD(DAY, @daysSinceEpoch, '1970-1-1'), @now);
+    SELECT CAST(CAST(NEWID() AS BINARY(10)) + CAST(@daysSinceEpoch*24*60*60*1000 + @msLeftOver AS BINARY(6)) AS UNIQUEIDENTIFIER);
+
+    Or on MSSQL 2016/Azure
+
+        SELECT CAST(CAST(NEWID() AS BINARY(10)) + CAST(DATEDIFF_BIG(MILLISECOND, '1970-1-1', GETUTCDATE()) AS BINARY(6)) AS UNIQUEIDENTIFIER);
+
+Extracting a `datetime` value from a COMB `uniqueidentifier` created using the above T-SQL:
+
+	DECLARE @msSinceEpoch BIGINT = CAST(CAST(0 AS BINARY(2)) + SUBSTRING(CAST(@value AS BINARY(16)), 11, 6) AS BIGINT);
+    DECLARE @daysSinceEpoch BIGINT = @msSinceEpoch/1000/60/60/24;
+    DECLARE @leftoverMs INT = @msSinceEpoch - @daysSinceEpoch*24*60*60*1000;
+    SELECT DATEADD(MILLISECOND, @leftoverMs, DATEADD(DAY, @daysSinceEpoch, '1970-01-01'));
+
 SqlDateTimeStrategy
 -------------------
 This strategy returns bytes for a timestamp with *part* of an MSSQL `datetime` value. The `datetime` type in MSSQL is an 8-byte structure. The first four bytes are a *signed* integer representing the number of days since January 1, 1900. Negative values are permitted to go back to `1752-01-01` (for Reasons), and positive values are permitted through `9999-12-12`. The remaining four bytes represent the time as the number of unsigned 300ths of a second since midnight. Since a day is always 24 hours, this integer never uses more than 25 bits. 
