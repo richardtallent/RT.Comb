@@ -81,21 +81,36 @@ This implementation was inspired by work done on the Marten project, which uses 
 
 Creating a COMB `uniqueidentifier` in T-SQL with the current date and time:
 
-    DECLARE @now DATETIME = GETUTCDATE();
-    DECLARE @daysSinceEpoch BIGINT = DATEDIFF(DAY, '1970-1-1', @now);
-    DECLARE @msLeftOver INT = DATEDIFF(MILLISECOND, DATEADD(DAY, @daysSinceEpoch, '1970-1-1'), @now);
-    SELECT CAST(CAST(NEWID() AS BINARY(10)) + CAST(@daysSinceEpoch*24*60*60*1000 + @msLeftOver AS BINARY(6)) AS UNIQUEIDENTIFIER);
+```SQL
+DECLARE @now DATETIME = GETUTCDATE();
+DECLARE @daysSinceEpoch BIGINT = DATEDIFF(DAY, '1970-1-1', @now);
+DECLARE @msLeftOver INT = DATEDIFF(MILLISECOND, DATEADD(DAY, @daysSinceEpoch, '1970-1-1'), @now);
+SELECT CAST(
+		CAST(NEWID() AS BINARY(10))
+		+ CAST(@daysSinceEpoch * 24 * 60 * 60 * 1000 + @msLeftOver AS BINARY(6))
+	AS UNIQUEIDENTIFIER);
+```
 
-    Or on MSSQL 2016/Azure
+Or on MSSQL 2016/Azure:
 
-        SELECT CAST(CAST(NEWID() AS BINARY(10)) + CAST(DATEDIFF_BIG(MILLISECOND, '1970-1-1', GETUTCDATE()) AS BINARY(6)) AS UNIQUEIDENTIFIER);
+```SQL
+SELECT CAST(
+		CAST(NEWID() AS BINARY(10))
+		+ CAST(DATEDIFF_BIG(MILLISECOND, '1970-1-1', GETUTCDATE())
+	AS BINARY(6)) AS UNIQUEIDENTIFIER);
+```
 
 Extracting a `datetime` value from a COMB `uniqueidentifier` created using the above T-SQL:
 
-	DECLARE @msSinceEpoch BIGINT = CAST(CAST(0 AS BINARY(2)) + SUBSTRING(CAST(@value AS BINARY(16)), 11, 6) AS BIGINT);
-    DECLARE @daysSinceEpoch BIGINT = @msSinceEpoch/1000/60/60/24;
-    DECLARE @leftoverMs INT = @msSinceEpoch - @daysSinceEpoch*24*60*60*1000;
-    SELECT DATEADD(MILLISECOND, @leftoverMs, DATEADD(DAY, @daysSinceEpoch, '1970-01-01'));
+```SQL
+DECLARE @msSinceEpoch BIGINT = CAST(
+		CAST(0 AS BINARY(2))
+		+ SUBSTRING(CAST(@value AS BINARY(16)), 11, 6)
+	AS BIGINT);
+DECLARE @daysSinceEpoch BIGINT = @msSinceEpoch / 1000 / 60 / 60 / 24;
+DECLARE @leftoverMs INT = @msSinceEpoch - @daysSinceEpoch * 24 * 60 * 60 * 1000;
+SELECT DATEADD(MILLISECOND, @leftoverMs, DATEADD(DAY, @daysSinceEpoch, '1970-01-01'));
+```
 
 SqlDateTimeStrategy
 -------------------
@@ -107,11 +122,29 @@ If you use this in conjunction with `SqlCombProvider`, your COMB values will be 
 
 Creating a COMB `uniqueidentifier` in T-SQL with the current date and time:
 
-    CAST(CAST(NEWID() AS binary(10)) + CAST(GETUTCDATE() AS binary(6)) AS uniqueidentifier)
+```SQL
+DECLARE @value DATETIME = '2002-01-10 23:40:35'
+
+SELECT CAST(
+		CAST(NEWID() AS binary(10))
+		+ CAST(@value AS binary(6))
+	AS uniqueidentifier)
+
+--xxxxxxxx-xxxx-xxxx-xxxx-919001862CC4
+```
 
 Extracting a `datetime` value from a COMB `uniqueidentifier` created using the above T-SQL:
 
-	CAST(CAST(0 AS binary(2)) + SUBSTRING(CAST(@value AS binary(16)), 11, 6) AS datetime)
+```SQL
+DECLARE @value UNIQUEIDENTIFIER = 'E25AFE33-DB2D-4502-9BF0-919001862D20'
+
+SELECT CAST(
+		CAST(0 AS binary(2))
+		+ SUBSTRING(CAST(@value AS binary(16)), 11, 6)
+	AS datetime)
+
+-- "2002-01-10 23:40:35"
+```
 
 ICombProvider
 =============
