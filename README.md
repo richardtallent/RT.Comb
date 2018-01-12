@@ -143,7 +143,7 @@ SELECT CAST(
 		+ SUBSTRING(CAST(@value AS binary(16)), 11, 6)
 	AS datetime)
 
--- "2002-01-10 23:40:35"
+-- 2002-01-10 23:40:35.000
 ```
 
 ICombProvider
