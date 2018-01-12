@@ -136,7 +136,7 @@ SELECT CAST(
 Extracting a `datetime` value from a COMB `uniqueidentifier` created using the above T-SQL:
 
 ```SQL
-DECLARE @value UNIQUEIDENTIFIER = 'E25AFE33-DB2D-4502-9BF0-919001862D20'
+DECLARE @value UNIQUEIDENTIFIER = 'E25AFE33-DB2D-4502-9BF0-919001862CC4'
 
 SELECT CAST(
 		CAST(0 AS binary(2))
