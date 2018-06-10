@@ -245,7 +245,7 @@ Revision History
  - 2.2.0    2017-03-28  Fixed namespace for ICombProvider, adjusted the interface to allow overriding how the default timestamp and Guid are obtained. Created TimestampProvider implementation that forces unique, increasing timestamps (for its instance) as a solution for #5.
  - 2.2.1    2017-04-02  Converted to `.csproj`. Now targeting .NET Standard 1.2. Not packaged for NuGet.
  - 2.3.0	2017-07-09	Simplify interface w/static class, remove `TimestampProvider` and `GuidProvider` from interface and make them immutable in the concrete implementations.
- - 2.3.1	2018-06-10	Migrated demo and test apps to netstandard 2.1, downgraded library to netstandard 1.1 for maximum compatibility.
+ - 2.3.1	2018-06-10	Migrated demo and test apps to netstandard 2.1, downgraded library to netstandard 1.0 for maximum compatibility.
 
 More Information
 =================================
