@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<AssemblyTitle>RT.Comb.Tests</AssemblyTitle>
-		<VersionPrefix>2.2.1</VersionPrefix>
+		<VersionPrefix>2.3.1</VersionPrefix>
 		<TargetFramework>netcoreapp2.1</TargetFramework>
 		<DebugType>portable</DebugType>
 		<AssemblyName>RT.Comb.Tests</AssemblyName>
