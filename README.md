@@ -245,6 +245,7 @@ Revision History
  - 2.2.0    2017-03-28  Fixed namespace for ICombProvider, adjusted the interface to allow overriding how the default timestamp and Guid are obtained. Created TimestampProvider implementation that forces unique, increasing timestamps (for its instance) as a solution for #5.
  - 2.2.1    2017-04-02  Converted to `.csproj`. Now targeting .NET Standard 1.2. Not packaged for NuGet.
  - 2.3.0	2017-07-09	Simplify interface w/static class, remove `TimestampProvider` and `GuidProvider` from interface and make them immutable in the concrete implementations.
+ - 2.3.1	2018-06-10	Migrated demo and test apps to netstandard 2.1, downgraded library to netstandard 1.1 for maximum compatibility.
 
 More Information
 =================================
@@ -256,7 +257,7 @@ http://www.siepman.nl/blog/post/2013/10/28/ID-Sequential-Guid-COMB-Vs-Int-Identi
 
 License (MIT "Expat")
 =====================
-Copyright 2015-2017 Richard S. Tallent, II
+Copyright 2015-2018 Richard S. Tallent, II
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

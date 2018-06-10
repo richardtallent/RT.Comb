@@ -1,18 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <Description>Library to create and use COMB (timestamped sequential) GUID variants for Microsoft SQL Server and PostgreSQL. See the GitHub site for more details.</Description>
-    <Copyright>Copyright 2015-2017 Richard S. Tallent</Copyright>
-    <AssemblyTitle>RT.Comb</AssemblyTitle>
-    <VersionPrefix>2.3.0</VersionPrefix>
-    <Authors>Richard Tallent</Authors>
-    <TargetFrameworks>netstandard1.2</TargetFrameworks>
-    <PlatformTarget>anycpu</PlatformTarget>
-    <AssemblyName>RT.Comb</AssemblyName>
-    <PackageId>RT.Comb</PackageId>
-    <PackageTags>.NETCore Comb GUID PostgreSQL MSSQL uniqueidentifier UUID</PackageTags>
-    <PackageIconUrl>http://www.tallent.us/code/RT.Comb.png</PackageIconUrl>
-    <PackageProjectUrl>https://github.com/richardtallent/RT.Comb</PackageProjectUrl>
-    <PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
-    <RepositoryUrl>https://github.com/richardtallent/RT.Comb</RepositoryUrl>
-  </PropertyGroup>
+	<PropertyGroup>
+		<Description>Library to create and use COMB (timestamped sequential) GUID variants for Microsoft SQL Server and PostgreSQL. See the GitHub site for more details.</Description>
+		<Copyright>Copyright 2015-2017 Richard S. Tallent</Copyright>
+		<AssemblyTitle>RT.Comb</AssemblyTitle>
+		<VersionPrefix>2.3.1</VersionPrefix>
+		<Authors>Richard Tallent</Authors>
+		<TargetFrameworks>netstandard1.0</TargetFrameworks>
+		<PlatformTarget>anycpu</PlatformTarget>
+		<AssemblyName>RT.Comb</AssemblyName>
+		<PackageId>RT.Comb</PackageId>
+		<PackageTags>.NETCore Comb GUID PostgreSQL MSSQL uniqueidentifier UUID</PackageTags>
+		<PackageIconUrl>http://www.tallent.us/code/RT.Comb.png</PackageIconUrl>
+		<PackageProjectUrl>https://github.com/richardtallent/RT.Comb</PackageProjectUrl>
+		<PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
+		<RepositoryUrl>https://github.com/richardtallent/RT.Comb</RepositoryUrl>
+	</PropertyGroup>
 </Project>

@@ -1,12 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
-  </PropertyGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>netcoreapp2.1</TargetFramework>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="../src/RT.Comb/RT.Comb.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="../src/RT.Comb/RT.Comb.csproj" />
+	</ItemGroup>
 
 </Project>
