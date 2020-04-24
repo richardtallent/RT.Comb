@@ -1,6 +1,6 @@
 using System;
 /*
-	Copyright 2015-2017 Richard S. Tallent, II
+	Copyright 2015-2020 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -17,11 +17,11 @@ using System;
 
 namespace RT.Comb {
 
-    public class SqlCombProvider : BaseCombProvider {
+	public class SqlCombProvider : BaseCombProvider {
 
 		private const int EmbedAtIndex = 10;
 
-		public SqlCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider customTimestampProvider = null, GuidProvider customGuidProvider = null) : base(dateTimeStrategy, customTimestampProvider, customGuidProvider) {}
+		public SqlCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider customTimestampProvider = null, GuidProvider customGuidProvider = null) : base(dateTimeStrategy, customTimestampProvider, customGuidProvider) { }
 
 		public override Guid Create(Guid value, DateTime timestamp) {
 			var gbytes = value.ToByteArray();
@@ -37,6 +37,6 @@ namespace RT.Comb {
 			return _dateTimeStrategy.BytesToDateTime(dbytes);
 		}
 
-    }
+	}
 
 }

@@ -1,6 +1,6 @@
 using System;
 /*
-	Copyright 2015-2017 Richard S. Tallent, II
+	Copyright 2015-2020 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -17,9 +17,9 @@ using System;
 
 namespace RT.Comb {
 
-    public class PostgreSqlCombProvider : BaseCombProvider {
+	public class PostgreSqlCombProvider : BaseCombProvider {
 
-		public PostgreSqlCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider customTimestampProvider = null, GuidProvider customGuidProvider = null) : base(dateTimeStrategy, customTimestampProvider, customGuidProvider) {}
+		public PostgreSqlCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider customTimestampProvider = null, GuidProvider customGuidProvider = null) : base(dateTimeStrategy, customTimestampProvider, customGuidProvider) { }
 
 		public override Guid Create(Guid value, DateTime timestamp) {
 			var gbytes = value.ToByteArray();
@@ -42,11 +42,11 @@ namespace RT.Comb {
 		// order, so we need to reverse one or both of those so the bytes we want are re-reversed to the correct 
 		// order by Npgsql's GUID data type handler.
 		private void SwapByteOrderForStringOrder(byte[] input) {
-			Array.Reverse(input,0,4);				// Swap around the first 4 bytes
-			if(input.Length==4) return;
-			Array.Reverse(input,4,2);				// Swap around the next 2 bytes
+			Array.Reverse(input, 0, 4);             // Swap around the first 4 bytes
+			if (input.Length == 4) return;
+			Array.Reverse(input, 4, 2);             // Swap around the next 2 bytes
 		}
 
-    }
+	}
 
 }

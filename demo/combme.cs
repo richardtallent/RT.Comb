@@ -1,7 +1,7 @@
 ﻿using System;
 using RT.Comb;
 /*
-	Copyright 2015-2017 Richard S. Tallent, II
+	Copyright 2015-2020 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -24,29 +24,29 @@ for you. Pass it a COMB GUID and it will return the timestamp. Keep in mind
 that the default timestamp provider uses UST.
 ******************************************************************************
  */
- 
+
 enum ExitCode : int {
-  Success = 0,
-  NotAGuid = 1
+	Success = 0,
+	NotAGuid = 1
 }
 
 class CombMe {
 
-    public static int Main(string[] args) {
+	public static int Main(string[] args) {
 
-        if(args.Length == 0) {
-            Console.WriteLine(Provider.Sql.Create());
+		if (args.Length == 0) {
+			Console.WriteLine(Provider.Sql.Create());
 			return (int)ExitCode.Success;
-        }
-		
+		}
+
 		Guid g;
-		if(!Guid.TryParse(args[0], out g)) {
+		if (!Guid.TryParse(args[0], out g)) {
 			Console.WriteLine("Not a GUID.");
 			return (int)ExitCode.NotAGuid;
 		}
 		Console.WriteLine(Provider.Sql.GetTimestamp(g));
 		return (int)ExitCode.Success;
 
-    }
+	}
 
 }

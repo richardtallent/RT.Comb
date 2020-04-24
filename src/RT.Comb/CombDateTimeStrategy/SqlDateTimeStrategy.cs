@@ -1,6 +1,6 @@
 ﻿using System;
 /*
-	Copyright 2015-2017 Richard S. Tallent, II
+	Copyright 2015-2020 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -22,7 +22,7 @@ namespace RT.Comb {
 	/// Strategies can differ depending on how many bytes of the GUID you wish to overwrite,
 	/// what time resolution you want, etc.
 	/// </summary>
-    public class SqlDateTimeStrategy : ICombDateTimeStrategy {
+	public class SqlDateTimeStrategy : ICombDateTimeStrategy {
 
 		private const double TicksPerDay = 86400d * 300d;
 
@@ -43,7 +43,7 @@ namespace RT.Comb {
 			var tickBytes = BitConverter.GetBytes(ticks);
 			var dayBytes = BitConverter.GetBytes(days);
 
-			if(BitConverter.IsLittleEndian) {
+			if (BitConverter.IsLittleEndian) {
 				// x86 platforms store the LEAST significant bytes first, we want the opposite for our arrays
 				Array.Reverse(dayBytes);
 				Array.Reverse(tickBytes);
@@ -62,7 +62,7 @@ namespace RT.Comb {
 			Array.Copy(value, 0, dayBytes, 0, 2);
 			Array.Copy(value, 2, tickBytes, 0, 4);
 
-			if(BitConverter.IsLittleEndian) {
+			if (BitConverter.IsLittleEndian) {
 				// COMBs store the MOST significant bytes first, we need the opposite to convert back to x86-form int/ushort
 				Array.Reverse(dayBytes);
 				Array.Reverse(tickBytes);
@@ -71,15 +71,15 @@ namespace RT.Comb {
 			var days = BitConverter.ToUInt16(dayBytes, 0);
 			var ticks = BitConverter.ToInt32(tickBytes, 0);
 
-			if(ticks < 0f) {
+			if (ticks < 0f) {
 				throw new ArgumentException("Not a COMB, time component is negative.");
-			} else if(ticks > TicksPerDay) {
+			} else if (ticks > TicksPerDay) {
 				throw new ArgumentException("Not a COMB, time component exceeds 24 hours.");
 			}
 
 			return MinDateTimeValue.AddDays(days).AddMilliseconds((double)ticks / TicksPerMillisecond);
 		}
 
-    }
+	}
 
 }

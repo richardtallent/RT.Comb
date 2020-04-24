@@ -1,6 +1,6 @@
 ﻿using System;
 /*
-	Copyright 2015-2017 Richard S. Tallent, II
+	Copyright 2015-2020 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -21,18 +21,18 @@ namespace RT.Comb {
 	/// This strategy stores the Unix epoch timestamp, scaled to milliseconds, in 48 unsigned bits.
 	/// The allowed date range is 1970-01-01 to 8419-05-26.
 	/// </summary>
-    public class UnixDateTimeStrategy : ICombDateTimeStrategy {
+	public class UnixDateTimeStrategy : ICombDateTimeStrategy {
 
 		public int NumDateBytes { get { return 6; } }
 
-		public DateTime MinDateTimeValue { get; } = new DateTime(1970,1,1,0,0,0,0,System.DateTimeKind.Utc);
+		public DateTime MinDateTimeValue { get; } = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
 
 		public DateTime MaxDateTimeValue { get { return MinDateTimeValue.AddMilliseconds(2 ^ (8 * NumDateBytes)); } }
 
 		public byte[] DateTimeToBytes(DateTime timestamp) {
 			var ms = ToUnixTimeMilliseconds(timestamp);
 			var msBytes = BitConverter.GetBytes(ms);
-			if(BitConverter.IsLittleEndian) Array.Reverse(msBytes);
+			if (BitConverter.IsLittleEndian) Array.Reverse(msBytes);
 			var result = new byte[NumDateBytes];
 			var index = msBytes.GetUpperBound(0) + 1 - NumDateBytes;
 			Array.Copy(msBytes, index, result, 0, NumDateBytes);
@@ -44,7 +44,7 @@ namespace RT.Comb {
 			var msBytes = new byte[8];
 			var index = 8 - NumDateBytes;
 			Array.Copy(value, 0, msBytes, index, NumDateBytes);
-			if(BitConverter.IsLittleEndian) Array.Reverse(msBytes);
+			if (BitConverter.IsLittleEndian) Array.Reverse(msBytes);
 			var ms = BitConverter.ToInt64(msBytes, 0);
 			return FromUnixTimeMilliseconds(ms);
 		}
@@ -56,10 +56,10 @@ namespace RT.Comb {
 		//(long)(timestamp.ToUniversalTime() - MinDateTimeValue).TotalMilliseconds;
 		//public DateTime FromUnixTimeMilliseconds(long ms) => MinDateTimeValue.AddMilliseconds(ms);
 
-		public long ToUnixTimeMilliseconds(DateTime timestamp) => (timestamp.Ticks - MinDateTimeValue.Ticks) / TicksPerMillisecond; 
+		public long ToUnixTimeMilliseconds(DateTime timestamp) => (timestamp.Ticks - MinDateTimeValue.Ticks) / TicksPerMillisecond;
 
 		public DateTime FromUnixTimeMilliseconds(long ms) => MinDateTimeValue.AddTicks(ms * TicksPerMillisecond);
 
-    }
+	}
 
 }
