@@ -24,7 +24,7 @@ namespace RT.Comb.AspNetCore.Tests
 			var sqlCombProvider = comb as SqlCombProvider;
 
 			Assert.NotNull(sqlCombProvider);
-			Assert.IsType<SqlDateTimeStrategy>(GetCurrentDateTimeStrategy(sqlCombProvider));
+			Assert.IsType<SqlDateTimeStrategy>(TestUtils.GetCurrentDateTimeStrategy(sqlCombProvider));
 			Assert.IsType<TimestampProvider>(sqlCombProvider.TimestampProvider);
 			Assert.IsType<GuidProvider>(sqlCombProvider.GuidProvider);
 		}
@@ -70,7 +70,7 @@ namespace RT.Comb.AspNetCore.Tests
 			var sqlCombProvider = comb as SqlCombProvider;
 
 			Assert.NotNull(sqlCombProvider);
-			Assert.IsType<UnixDateTimeStrategy>(GetCurrentDateTimeStrategy(sqlCombProvider));
+			Assert.IsType<UnixDateTimeStrategy>(TestUtils.GetCurrentDateTimeStrategy(sqlCombProvider));
 			Assert.IsType<TimestampProvider>(sqlCombProvider.TimestampProvider);
 			Assert.IsType<GuidProvider>(sqlCombProvider.GuidProvider);
 		}
@@ -98,15 +98,6 @@ namespace RT.Comb.AspNetCore.Tests
 			// Assert
 			customTimestampProviderMock.Verify(p => p.Invoke(), Times.Once);
 			customGuidProviderMock.Verify(p => p.Invoke(), Times.Once);
-		}
-
-		private ICombDateTimeStrategy GetCurrentDateTimeStrategy(ICombProvider combProvider)
-		{
-			var dateTimeStragetyField = combProvider
-				.GetType()
-				.GetField("_dateTimeStrategy", BindingFlags.NonPublic | BindingFlags.Instance);
-
-			return dateTimeStragetyField.GetValue(combProvider) as ICombDateTimeStrategy;
 		}
 	}
 }
