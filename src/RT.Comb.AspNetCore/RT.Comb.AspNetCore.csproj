@@ -21,8 +21,8 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="2.1.0" />
 	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\RT.Comb\RT.Comb.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\RT.Comb\RT.Comb.csproj" />
+	</ItemGroup>
 
 </Project>
