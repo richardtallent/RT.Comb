@@ -4,13 +4,11 @@ using System;
 using System.Reflection;
 using Xunit;
 
-namespace RT.Comb.AspNetCore.Tests
-{
-	public sealed class SqlCombProviderServiceCollectionExtensionsTests
-	{
+namespace RT.Comb.AspNetCore.Tests {
+	public sealed class SqlCombProviderServiceCollectionExtensionsTests {
+
 		[Fact]
-		public void AddSqlCombGuidWithSqlDateTime_ShouldAddSqlProviderWithDefaultStrategies()
-		{
+		public void AddSqlCombGuidWithSqlDateTime_ShouldAddSqlProviderWithDefaultStrategies() {
 			// Arrange
 			var services = new ServiceCollection();
 
@@ -30,8 +28,7 @@ namespace RT.Comb.AspNetCore.Tests
 		}
 
 		[Fact]
-		public void AddSqlCombGuidWithSqlDateTime_CustomStrategies_CreateShouldInvokeCustomStrategies()
-		{
+		public void AddSqlCombGuidWithSqlDateTime_CustomStrategies_CreateShouldInvokeCustomStrategies() {
 			// Arrange
 			var services = new ServiceCollection();
 
@@ -55,8 +52,7 @@ namespace RT.Comb.AspNetCore.Tests
 		}
 
 		[Fact]
-		public void AddSqlCombGuidWithUnixDateTime_ShouldAddSqlProviderWithDefaultStrategies()
-		{
+		public void AddSqlCombGuidWithUnixDateTime_ShouldAddSqlProviderWithDefaultStrategies() {
 			// Arrange
 			var services = new ServiceCollection();
 
@@ -76,8 +72,7 @@ namespace RT.Comb.AspNetCore.Tests
 		}
 
 		[Fact]
-		public void AddSqlCombGuidWithUnixDateTime_CustomStrategies_CreateShouldInvokeCustomStrategies()
-		{
+		public void AddSqlCombGuidWithUnixDateTime_CustomStrategies_CreateShouldInvokeCustomStrategies() {
 			// Arrange
 			var services = new ServiceCollection();
 
@@ -99,5 +94,7 @@ namespace RT.Comb.AspNetCore.Tests
 			customTimestampProviderMock.Verify(p => p.Invoke(), Times.Once);
 			customGuidProviderMock.Verify(p => p.Invoke(), Times.Once);
 		}
+
 	}
+
 }

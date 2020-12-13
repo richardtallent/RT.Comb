@@ -28,14 +28,13 @@ namespace RT.CombTests {
 		[Fact]
 		public void TestDateTimeToMs() {
 			var d = UnixStrategy.MinDateTimeValue.AddMilliseconds(1);
-			var ms = UnixStrategy.ToUnixTimeMilliseconds(d); 
+			var ms = UnixStrategy.ToUnixTimeMilliseconds(d);
 			Assert.Equal<long>(1, ms);
 		}
 
 		[Fact]
-		public void TestFromUnitMs() {
+		public void TestFromUnitMs() =>
 			Assert.Equal(UnixStrategy.MinDateTimeValue.AddMilliseconds(1), UnixStrategy.FromUnixTimeMilliseconds(1));
-		}
 
 		/// <summary>
 		/// Ensure that the date provided to be injected into a GUID is the same date we get back from it.
@@ -53,9 +52,8 @@ namespace RT.CombTests {
 		/// <summary>
 		/// Utility test function to return a GUID where the majority of the bits are set to 1.
 		/// </summary>
-		private Guid MaxGuid() {
-			return new Guid(int.MaxValue, short.MaxValue, short.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue);
-		}
+		private Guid MaxGuid() =>
+			new Guid(int.MaxValue, short.MaxValue, short.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue);
 
 		/// <summary>
 		/// Ensure that SQL Server will sort our COMB values in date/time order, without regard for
@@ -123,10 +121,10 @@ namespace RT.CombTests {
 			var g1 = SqlNoRepeatCombs.Create();
 			var dt1 = SqlNoRepeatCombs.GetTimestamp(g1);
 			var inSequenceCount = 0;
-			for(var i = 0; i < 1000; i++) {
+			for (var i = 0; i < 1000; i++) {
 				var g2 = SqlNoRepeatCombs.Create();
 				var dt2 = SqlNoRepeatCombs.GetTimestamp(g2);
-				if(dt2 > dt1) {
+				if (dt2 > dt1) {
 					inSequenceCount++;
 				} else {
 					Console.WriteLine($"{dt1:MM/dd/yyyy hh:mm:ss.fff} > {dt2:MM/dd/yyyy hh:mm:ss.fff}");

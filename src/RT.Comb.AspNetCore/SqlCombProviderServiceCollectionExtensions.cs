@@ -1,14 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace RT.Comb.AspNetCore
-{
+namespace RT.Comb.AspNetCore {
+
 	/// <summary>
 	/// Extension methods for <see cref="IServiceCollection"/> 
 	/// that allow adding a Comb Guid provider to the application's DI system.
 	/// </summary>
-	public static class SqlCombProviderServiceCollectionExtensions
-	{
+	public static class SqlCombProviderServiceCollectionExtensions {
+
 		/// <summary>
 		/// Registers a <see cref="SqlCombProvider"/> in the <see cref="IServiceCollection"/> 
 		/// using a <see cref="SqlDateTimeStrategy"/>
@@ -23,11 +23,9 @@ namespace RT.Comb.AspNetCore
 		public static void AddSqlCombGuidWithSqlDateTime(
 			this IServiceCollection services,
 			TimestampProvider customTimestampProvider = null,
-			GuidProvider customGuidProvider = null)
-		{
-			services.TryAddSingleton<ICombProvider>(
+			GuidProvider customGuidProvider = null
+		) => services.TryAddSingleton<ICombProvider>(
 				AddSqlCombGuid(new SqlDateTimeStrategy(), customTimestampProvider, customGuidProvider));
-		}
 
 		/// <summary>
 		/// Registers a <see cref="SqlCombProvider"/> in the <see cref="IServiceCollection"/> 
@@ -43,18 +41,16 @@ namespace RT.Comb.AspNetCore
 		public static void AddSqlCombGuidWithUnixDateTime(
 			this IServiceCollection services,
 			TimestampProvider customTimestampProvider = null,
-			GuidProvider customGuidProvider = null)
-		{
-			services.TryAddSingleton<ICombProvider>(
+			GuidProvider customGuidProvider = null
+		) => services.TryAddSingleton<ICombProvider>(
 				AddSqlCombGuid(new UnixDateTimeStrategy(), customTimestampProvider, customGuidProvider));
-		}
 
 		private static SqlCombProvider AddSqlCombGuid(
-			ICombDateTimeStrategy dateTimeStrategy, 
-			TimestampProvider customTimestampProvider, 
-			GuidProvider customGuidProvider)
-		{
-			return new SqlCombProvider(dateTimeStrategy, customTimestampProvider, customGuidProvider);
-		}
+			ICombDateTimeStrategy dateTimeStrategy,
+			TimestampProvider customTimestampProvider,
+			GuidProvider customGuidProvider
+		) => new SqlCombProvider(dateTimeStrategy, customTimestampProvider, customGuidProvider);
+
 	}
+
 }

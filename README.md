@@ -251,6 +251,7 @@ Some missing pieces:
 - 2.3.0 2017-07-09 Simplify interface w/static class, remove `TimestampProvider` and `GuidProvider` from the interface and make them immutable in the concrete implementations.
 - 2.3.1 2018-06-10 Migrated demo and test apps to netstandard 2.1, downgraded library to netstandard 1.0 for maximum compatibility.
 - 2.4.0 2020-04-23 Bumped to netstandard 2.0. (#16)
+- 2.5.0 2020-12-13 Test package bumped to .NET 5.0. Added .NET Core DI package (#18, thanks @joaopgrassi!).
 
 # More Information
 

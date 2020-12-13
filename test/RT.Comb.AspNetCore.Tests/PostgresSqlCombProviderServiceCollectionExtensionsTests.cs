@@ -3,13 +3,11 @@ using Moq;
 using System;
 using Xunit;
 
-namespace RT.Comb.AspNetCore.Tests
-{
-	public sealed class PostgresSqlCombProviderServiceCollectionExtensionsTests
-	{
+namespace RT.Comb.AspNetCore.Tests {
+	public sealed class PostgresSqlCombProviderServiceCollectionExtensionsTests {
+
 		[Fact]
-		public void AddPostgreSqlCombGuidWithSqlDateTime_ShouldAddPostgreSqlProviderWithDefaultStrategies()
-		{
+		public void AddPostgreSqlCombGuidWithSqlDateTime_ShouldAddPostgreSqlProviderWithDefaultStrategies() {
 			// Arrange
 			var services = new ServiceCollection();
 
@@ -29,8 +27,7 @@ namespace RT.Comb.AspNetCore.Tests
 		}
 
 		[Fact]
-		public void AddPostgreSqlCombGuidWithSqlDateTime_CustomStrategies_CreateShouldInvokeCustomStrategies()
-		{
+		public void AddPostgreSqlCombGuidWithSqlDateTime_CustomStrategies_CreateShouldInvokeCustomStrategies() {
 			// Arrange
 			var services = new ServiceCollection();
 
@@ -54,8 +51,7 @@ namespace RT.Comb.AspNetCore.Tests
 		}
 
 		[Fact]
-		public void AddPostgreSqlCombGuidWithUnixDateTime_ShouldAddPostgreSqlProviderWithDefaultStrategies()
-		{
+		public void AddPostgreSqlCombGuidWithUnixDateTime_ShouldAddPostgreSqlProviderWithDefaultStrategies() {
 			// Arrange
 			var services = new ServiceCollection();
 
@@ -75,8 +71,7 @@ namespace RT.Comb.AspNetCore.Tests
 		}
 
 		[Fact]
-		public void AddPostgreSqlCombGuidWithUnixDateTime_CustomStrategies_CreateShouldInvokeCustomStrategies()
-		{
+		public void AddPostgreSqlCombGuidWithUnixDateTime_CustomStrategies_CreateShouldInvokeCustomStrategies() {
 			// Arrange
 			var services = new ServiceCollection();
 
@@ -98,5 +93,7 @@ namespace RT.Comb.AspNetCore.Tests
 			customTimestampProviderMock.Verify(p => p.Invoke(), Times.Once);
 			customGuidProviderMock.Verify(p => p.Invoke(), Times.Once);
 		}
+
 	}
+
 }

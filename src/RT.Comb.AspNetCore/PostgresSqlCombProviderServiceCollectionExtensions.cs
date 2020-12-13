@@ -1,14 +1,13 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace RT.Comb.AspNetCore
-{
+namespace RT.Comb.AspNetCore {
+
 	/// <summary>
 	/// Extension methods for <see cref="IServiceCollection"/> 
 	/// that allow adding a Comb Guid provider to the application's DI system.
 	/// </summary>
-	public static class PostgresSqlCombProviderServiceCollectionExtensions
-	{
+	public static class PostgresSqlCombProviderServiceCollectionExtensions {
 		/// <summary>
 		/// Registers a <see cref="PostgreSqlCombProvider"/> in the <see cref="IServiceCollection"/> 
 		/// using a <see cref="SqlDateTimeStrategy"/>
@@ -23,8 +22,8 @@ namespace RT.Comb.AspNetCore
 		public static void AddPostgreSqlCombGuidWithSqlDateTime(
 			this IServiceCollection services,
 			TimestampProvider customTimestampProvider = null,
-			GuidProvider customGuidProvider = null)
-		{
+			GuidProvider customGuidProvider = null
+		) {
 			services.TryAddSingleton<ICombProvider>(
 				AddPostgreSqlCombGuid(new SqlDateTimeStrategy(), customTimestampProvider, customGuidProvider));
 		}
@@ -43,8 +42,8 @@ namespace RT.Comb.AspNetCore
 		public static void AddPostgreSqlCombGuidWithUnixDateTime(
 			this IServiceCollection services,
 			TimestampProvider customTimestampProvider = null,
-			GuidProvider customGuidProvider = null)
-		{
+			GuidProvider customGuidProvider = null
+		) {
 			services.TryAddSingleton<ICombProvider>(
 				AddPostgreSqlCombGuid(new UnixDateTimeStrategy(), customTimestampProvider, customGuidProvider));
 		}
@@ -52,9 +51,11 @@ namespace RT.Comb.AspNetCore
 		private static PostgreSqlCombProvider AddPostgreSqlCombGuid(
 			ICombDateTimeStrategy dateTimeStrategy,
 			TimestampProvider customTimestampProvider,
-			GuidProvider customGuidProvider)
-		{
+			GuidProvider customGuidProvider
+		) {
 			return new PostgreSqlCombProvider(dateTimeStrategy, customTimestampProvider, customGuidProvider);
 		}
+
 	}
+
 }
