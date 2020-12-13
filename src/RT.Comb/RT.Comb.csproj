@@ -10,7 +10,6 @@
 		<AssemblyName>RT.Comb</AssemblyName>
 		<PackageId>RT.Comb</PackageId>
 		<PackageTags>.NETCore Comb GUID PostgreSQL MSSQL uniqueidentifier UUID</PackageTags>
-		<PackageIconUrl>https://tallent.us/code/RT.Comb.png</PackageIconUrl>
 		<PackageIcon>RT.Comb.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/richardtallent/RT.Comb</PackageProjectUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>

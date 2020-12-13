@@ -11,9 +11,9 @@
 		<AssemblyName>RT.Comb.AspNetCore</AssemblyName>
 		<PackageId>RT.Comb.AspNetCore</PackageId>
 		<PackageTags>.NETCore Comb GUID PostgreSQL MSSQL uniqueidentifier UUID</PackageTags>
-		<PackageIconUrl>https://tallent.us/code/RT.Comb.png</PackageIconUrl>
+		<PackageIcon>RT.Comb.png</PackageIcon>
 		<PackageProjectUrl>https://github.com/richardtallent/RT.Comb</PackageProjectUrl>
-		<PackageLicenseUrl>https://opensource.org/licenses/MIT</PackageLicenseUrl>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/richardtallent/RT.Comb</RepositoryUrl>
 	</PropertyGroup>
 
@@ -23,6 +23,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\RT.Comb\RT.Comb.csproj" />
+		<None Include="..\..\RT.Comb.png" Pack="true" PackagePath=""/>
 	</ItemGroup>
 
 </Project>
