@@ -32,7 +32,7 @@ Each of these has only **two public methods**:
 - `Create()` returns a COMB GUID. You can _optionally_ pass your own baseline GUID and/or timestamp to embed.
 - `GetTimestamp()` returns the timestamp embedded in a previously-created COMB GUID.
 
-An example console application using the "Sql" version is provided in the `demo` folder showing a minimal-code use of both of these methods.
+An example console application using the `Sql` version is provided in the `demo` folder showing a minimal-code use of both of these methods.
 
 # Advanced Usage
 
@@ -43,7 +43,7 @@ There are two core interfaces: `ICombProvider`, responsible for embedding and ex
 There are two included implementations of `ICombProvider`:
 
 - `SqlCombProvider`: This creates and decodes COMBs in GUIDs that are compatible with the way Microsoft SQL Server sorts `uniqueidentifier` values -- _i.e._, starting at the 11th byte.
-- `PostgreSqlCombProvider`: This creates and decodes COMBs in GUIDs that are compatible with the way PostegreSQL sorts `uuid` values -- _i.e._, starting with the first byte shown in string representations of a `Guid`.
+- `PostgreSqlCombProvider`: This creates and decodes COMBs in GUIDs that are compatible with the way PostgreSQL sorts `uuid` values -- _i.e._, starting with the first byte shown in string representations of a `Guid`.
 
 Both take an `IDateTimeStrategy` argument in their constructor. Two strategies are included:
 
@@ -155,7 +155,7 @@ Regardless which strategy is used for encoding the timestamp, we need to overwri
 
 MSSQL and `System.Data.SqlTypes.SqlGuid` sort _first_ by the _last 6_ `Data4` bytes, _left to right_, then the first two bytes of `Data4` (again, left to right), then `Data3`, `Data2`, and `Data1` _right to left_. This means for COMB purposes, we want to overwrite the last 6 bytes of `Data4` (byte index 10), left to right.
 
-However, PostgreSQL and `System.Guid` sort GUIDs in the order shown as a string, which means for PostgreSQL COMB values, we want to overwrite the bytes that are _shown first_ from the left. Since `System.Guid` _shows_ bytes for `Data1`, `Data2`, and `Data3` in a different order than it _stores_ them internally, we have to account for this when overwriting those bytes. For example, our most significant byte inside a `Guid` will be at index 3, not index 0.
+However, PostgreSQL and `System.Guid` sort GUIDs in the order shown as a string, which means for PostgreSQL COMB values, we want to overwrite the bytes that are _shown_ first from the left. Since `System.Guid` _shows_ bytes for `Data1`, `Data2`, and `Data3` in a different order than it _stores_ them internally, we have to account for this when overwriting those bytes. For example, our most significant byte inside a `Guid` will be at index 3, not index 0.
 
 Here is a fiddler illustrating some of this:
 
@@ -182,7 +182,7 @@ For PostgreSQL, the _first_ bytes are sorted first, so those are the ones we wan
     V = variant
     x = random
 
-Recall that `System.Guid` stores its bytes for `Data1` and `Data2` in a different order than they are shown, so we have to reverse the bytes we're putting into those areas so they are stored and sorted in PostgreSQL in network byte order.
+Recall that `System.Guid` stores its bytes for `Data1` and `Data2` in a different order than they are shown, so we have to reverse the bytes we're putting into those areas so they are stored and sorted in PostgreSQL in network-byte order.
 
 **This is a breaking change for RT.Comb v.1.4.** In prior versions, I wasn't actually able to test on PostgreSQL and got this all wrong, along with misplacing where the version nybble was and doing unnecessary bit-gymnastics to avoid overwriting it. My error was kindly pointed out by Barry Hagan and has been fixed.
 
@@ -198,7 +198,7 @@ By default, SqlCombProvider and PostgreSqlCombProvider use `DateTime.UtcNow` whe
 
 The DateTime strategies described above are limited to 1-3ms resolution, which means if you create many COMB values per second, there is a chance you'll create two with the same timestamp value.
 
-This won't result in a database collision--the remaining random bits in the GUID protect you there. But COMBs with exactly the same timestamp value aren't _guaranteed_ to sort in order of insertion, because once the timestamp bytes are sorted, the sort order will rely on the random bytes after that. **This is expected behavior**. As with any timestamp-based field, COMBs are not guaranteed to be sequential once you're inserting records faster than the stored clock resolution. Also, on Windows platforms, the system timer only has a resolution of 15.625ms, which amplifies this problem. So, in general, don't rely on COMBs to have values that sort in _exactly_ the same order as they were inserted.
+This won't result in a database collision--the remaining random bits in the GUID protect you there. But COMBs with exactly the same timestamp value aren't _guaranteed_ to sort in order of insertion because once the timestamp bytes are sorted, the sort order will rely on the random bytes after that. **This is expected behavior**. As with any timestamp-based field, COMBs are not guaranteed to be sequential once you're inserting records faster than the stored clock resolution. Also, on Windows platforms, the system timer only has a resolution of 15.625ms, which amplifies this problem. So, in general, don't rely on COMBs to have values that sort in _exactly_ the same order as they were inserted.
 
 If your sort order must be guaranteed, I've come up with a workaround -- a `TimestampProvider` delegate called `UtcNoRepeatTimestampProvider.GetTimestamp`. This method checks to ensure that the current time is at least `IncrementMs` milliseconds more recent than the previous value it generated. If not, it returns the previous value plus `IncrementMs` instead. Either way, it then keeps track of what it returned for the next round. This checking is thread-safe. By default, `IncrementMs` is set to 4ms, which is sufficient to ensure that `SqlDateTimeStrategy` timestamp values won't collide (which has a ~3ms resolution). If you're using `UnixDateTimeStrategy`, you can optionally set this to a lower value (such as 1ms) instead. The table below shows some examples values you might get from `DateTime.UtcNow` in a tight loop vs. what `UtcNoRepeatTimestampProvider` would return:
 
@@ -211,7 +211,7 @@ If your sort order must be guaranteed, I've come up with a workaround -- a `Time
 
 Note that you're trading a "time slip" of a few milliseconds during high insert rates for a guarantee that the `UtcNoRepeatTimestampProvider` won't repeat its timestamp, so COMBs will always sort exactly in insert order. This is fine if your transaction rate just has occasional bumps, but if you're constantly writing thousands of records per second, the time slip could accumulate into something real, especially with the 4ms default increment.
 
-To use this workaround, you'll need to create your own ICombProvider instance rather than using the the built-in static instances in `RT.Comb.Provider`, and pass this delegate in the provider constructor. You can find an example of this in the test suite.
+To use this workaround, you'll need to create your own ICombProvider instance rather than using the built-in static instances in `RT.Comb.Provider`, and pass this delegate in the provider constructor. You can find an example of this in the test suite.
 
 # How To Contribute
 
