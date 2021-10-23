@@ -30,9 +30,9 @@ namespace RT.Comb {
 
 		DateTime MaxDateTimeValue { get; }
 
-		byte[] DateTimeToBytes(DateTime timestamp);
+		void WriteDateTime(Span<byte> destination, DateTime timestamp);
 
-		DateTime BytesToDateTime(byte[] value);
+		DateTime ReadDateTime(ReadOnlySpan<byte> source);
 
 	}
 

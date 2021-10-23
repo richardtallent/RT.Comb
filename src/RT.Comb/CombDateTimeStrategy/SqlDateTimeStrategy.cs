@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 /*
 	Copyright 2015-2020 Richard S. Tallent, II
 
@@ -28,56 +29,34 @@ namespace RT.Comb {
 
 		private const double TicksPerMillisecond = 3d / 10d;
 
-		public int NumDateBytes { get; } = 6;
+		public int NumDateBytes => 6;
 
 		public DateTime MinDateTimeValue { get; } = new DateTime(1900, 1, 1);
 
-		public DateTime MaxDateTimeValue { get { return MinDateTimeValue.AddDays(ushort.MaxValue); } }
+		public DateTime MaxDateTimeValue => MinDateTimeValue.AddDays(ushort.MaxValue);
 
-		public byte[] DateTimeToBytes(DateTime timestamp) {
+		public void WriteDateTime(Span<byte> destination, DateTime timestamp) {
 			// Convert the time to 300ths of a second. SQL Server uses float math for this before converting to an integer, so this does as well
 			// to avoid rounding errors. This is confirmed in MSSQL by SELECT CONVERT(varchar, CAST(CAST(2 as binary(8)) AS datetime), 121),
 			// which would return .006 if it were integer math, but it returns .007.
 			var ticks = (int)(timestamp.TimeOfDay.TotalMilliseconds * TicksPerMillisecond);
 			var days = (ushort)(timestamp - MinDateTimeValue).TotalDays;
-			var tickBytes = BitConverter.GetBytes(ticks);
-			var dayBytes = BitConverter.GetBytes(days);
-
-			if (BitConverter.IsLittleEndian) {
-				// x86 platforms store the LEAST significant bytes first, we want the opposite for our arrays
-				Array.Reverse(dayBytes);
-				Array.Reverse(tickBytes);
-			}
-
-			var result = new byte[NumDateBytes];
-			Array.Copy(dayBytes, 0, result, 0, 2);
-			Array.Copy(tickBytes, 0, result, 2, 4);
-			return result;
+			BinaryPrimitives.WriteInt32BigEndian(destination.Slice(2), ticks);
+			BinaryPrimitives.WriteUInt16BigEndian(destination, days);
 		}
 
-		public DateTime BytesToDateTime(byte[] value) {
+		public DateTime ReadDateTime(ReadOnlySpan<byte> source) {
 			// Attempt to convert the first 6 bytes.
-			var dayBytes = new byte[2];                     // Empty ushort
-			var tickBytes = new byte[4];                    // Empty int
-			Array.Copy(value, 0, dayBytes, 0, 2);
-			Array.Copy(value, 2, tickBytes, 0, 4);
+			ushort days = BinaryPrimitives.ReadUInt16BigEndian(source.Slice(0, 2));
+			double ticks = BinaryPrimitives.ReadInt32BigEndian(source.Slice(2, 4));
 
-			if (BitConverter.IsLittleEndian) {
-				// COMBs store the MOST significant bytes first, we need the opposite to convert back to x86-form int/ushort
-				Array.Reverse(dayBytes);
-				Array.Reverse(tickBytes);
-			}
-
-			var days = BitConverter.ToUInt16(dayBytes, 0);
-			var ticks = BitConverter.ToInt32(tickBytes, 0);
-
-			if (ticks < 0f) {
+			if (ticks < 0) {
 				throw new ArgumentException("Not a COMB, time component is negative.");
 			} else if (ticks > TicksPerDay) {
 				throw new ArgumentException("Not a COMB, time component exceeds 24 hours.");
 			}
 
-			return MinDateTimeValue.AddDays(days).AddMilliseconds((double)ticks / TicksPerMillisecond);
+			return MinDateTimeValue.AddDays(days).AddMilliseconds(ticks / TicksPerMillisecond);
 		}
 
 	}

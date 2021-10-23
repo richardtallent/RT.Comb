@@ -29,32 +29,27 @@ namespace RT.Comb {
 	public abstract class BaseCombProvider : ICombProvider {
 
 		protected ICombDateTimeStrategy _dateTimeStrategy;
+		private readonly TimestampProvider? _timestampProvider;
+		private readonly GuidProvider? _guidProvider;
 
-		public BaseCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider customTimestampProvider = null, GuidProvider customGuidProvider = null) {
+		public BaseCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider? customTimestampProvider = null, GuidProvider? customGuidProvider = null) {
 			if (dateTimeStrategy.NumDateBytes != 4 && dateTimeStrategy.NumDateBytes != 6) {
 				throw new NotSupportedException("ICombDateTimeStrategy is limited to either 4 or 6 bytes.");
 			}
 			_dateTimeStrategy = dateTimeStrategy;
-			this.TimestampProvider = customTimestampProvider ?? DefaultTimestampProvider;
-			this.GuidProvider = customGuidProvider ?? Guid.NewGuid;
+			_timestampProvider = customTimestampProvider;
+			_guidProvider = customGuidProvider;
 		}
 
 		public abstract DateTime GetTimestamp(Guid comb);
 
-		public Guid Create() => Create(GuidProvider.Invoke(), TimestampProvider.Invoke());
+		public Guid Create() => Create(_guidProvider?.Invoke() ?? Guid.NewGuid(), _timestampProvider?.Invoke() ?? DateTime.UtcNow);
 
-		public Guid Create(Guid value) => Create(value, TimestampProvider.Invoke());
+		public Guid Create(Guid value) => Create(value, _timestampProvider?.Invoke() ?? DateTime.UtcNow);
 
-		public Guid Create(DateTime timestamp) => Create(GuidProvider.Invoke(), timestamp);
+		public Guid Create(DateTime timestamp) => Create(_guidProvider?.Invoke() ?? Guid.NewGuid(), timestamp);
 
 		public abstract Guid Create(Guid value, DateTime timestamp);
-
-		// Default timestamp is UtcNow, but that's a property, wrap it as a function to meet the delegate spec
-		protected static DateTime DefaultTimestampProvider() => DateTime.UtcNow;
-
-		public TimestampProvider TimestampProvider { get; private set; } = DefaultTimestampProvider;
-
-		public GuidProvider GuidProvider { get; private set; } = Guid.NewGuid;
 
 	}
 

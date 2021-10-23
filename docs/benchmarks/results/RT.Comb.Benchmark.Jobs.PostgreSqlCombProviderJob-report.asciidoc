@@ -1,0 +1,21 @@
+....
+BenchmarkDotNet=v0.13.1, OS=fedora 34
+AMD Ryzen 5 1600, 1 CPU, 12 logical and 6 physical cores
+.NET SDK=5.0.206
+  [Host] : .NET 5.0.9 (5.0.921.41201), X64 RyuJIT
+  2.5.0  : .NET 5.0.9 (5.0.921.41201), X64 RyuJIT
+  3.0.0  : .NET 5.0.9 (5.0.921.41201), X64 RyuJIT
+
+....
+[options="header"]
+|===
+|                        Method|    Job|  NuGetReferences|         Mean|     Error|    StdDev|   Gen 0|  Allocated
+|                     CreateNew|  2.5.0|    RT.Comb 2.5.0|  1,369.61 ns|  8.555 ns|  8.003 ns|       -|      104 B
+|         CreateBasedOnDateTime|  2.5.0|    RT.Comb 2.5.0|  1,312.87 ns|  8.623 ns|  7.644 ns|       -|      104 B
+|             CreateBasedOnGuid|  2.5.0|    RT.Comb 2.5.0|    194.86 ns|  1.075 ns|  1.006 ns|  0.0012|      104 B
+|  CreateBasedOnGuidAndDateTime|  2.5.0|    RT.Comb 2.5.0|    156.81 ns|  1.684 ns|  1.575 ns|  0.0012|      104 B
+|                     CreateNew|  3.0.0|    RT.Comb 3.0.0|  1,177.71 ns|  3.690 ns|  3.271 ns|       -|          -
+|         CreateBasedOnDateTime|  3.0.0|    RT.Comb 3.0.0|  1,147.06 ns|  1.609 ns|  1.344 ns|       -|          -
+|             CreateBasedOnGuid|  3.0.0|    RT.Comb 3.0.0|     68.88 ns|  0.221 ns|  0.206 ns|       -|          -
+|  CreateBasedOnGuidAndDateTime|  3.0.0|    RT.Comb 3.0.0|     37.65 ns|  0.051 ns|  0.048 ns|       -|          -
+|===

@@ -21,8 +21,8 @@ namespace RT.Comb.AspNetCore {
 		/// <param name="customGuidProvider"> A delegate to a parameter-less function that returns a Guid value</param>
 		public static void AddPostgreSqlCombGuidWithSqlDateTime(
 			this IServiceCollection services,
-			TimestampProvider customTimestampProvider = null,
-			GuidProvider customGuidProvider = null
+			TimestampProvider? customTimestampProvider = null,
+			GuidProvider? customGuidProvider = null
 		) {
 			services.TryAddSingleton<ICombProvider>(
 				AddPostgreSqlCombGuid(new SqlDateTimeStrategy(), customTimestampProvider, customGuidProvider));
@@ -41,8 +41,8 @@ namespace RT.Comb.AspNetCore {
 		/// <param name="customGuidProvider"> A delegate to a parameter-less function that returns a Guid value</param>
 		public static void AddPostgreSqlCombGuidWithUnixDateTime(
 			this IServiceCollection services,
-			TimestampProvider customTimestampProvider = null,
-			GuidProvider customGuidProvider = null
+			TimestampProvider? customTimestampProvider = null,
+			GuidProvider? customGuidProvider = null
 		) {
 			services.TryAddSingleton<ICombProvider>(
 				AddPostgreSqlCombGuid(new UnixDateTimeStrategy(), customTimestampProvider, customGuidProvider));
@@ -50,8 +50,8 @@ namespace RT.Comb.AspNetCore {
 
 		private static PostgreSqlCombProvider AddPostgreSqlCombGuid(
 			ICombDateTimeStrategy dateTimeStrategy,
-			TimestampProvider customTimestampProvider,
-			GuidProvider customGuidProvider
+			TimestampProvider? customTimestampProvider,
+			GuidProvider? customGuidProvider
 		) {
 			return new PostgreSqlCombProvider(dateTimeStrategy, customTimestampProvider, customGuidProvider);
 		}

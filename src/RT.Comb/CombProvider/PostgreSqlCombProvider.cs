@@ -19,32 +19,39 @@ namespace RT.Comb {
 
 	public class PostgreSqlCombProvider : BaseCombProvider {
 
-		public PostgreSqlCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider customTimestampProvider = null, GuidProvider customGuidProvider = null) : base(dateTimeStrategy, customTimestampProvider, customGuidProvider) { }
+		public PostgreSqlCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider? customTimestampProvider = null, GuidProvider? customGuidProvider = null) : base(dateTimeStrategy, customTimestampProvider, customGuidProvider) { }
 
 		public override Guid Create(Guid value, DateTime timestamp) {
+#if NET5_0_OR_GREATER || NETSTANDARD2_1
+			Span<byte> gbytes = stackalloc byte[16];
+			value.TryWriteBytes(gbytes);
+#else
 			var gbytes = value.ToByteArray();
-			var dbytes = _dateTimeStrategy.DateTimeToBytes(timestamp);
-			Array.Copy(dbytes, 0, gbytes, 0, _dateTimeStrategy.NumDateBytes);
+#endif
+			_dateTimeStrategy.WriteDateTime(gbytes, timestamp);
 			SwapByteOrderForStringOrder(gbytes);
 			return new Guid(gbytes);
 		}
 
 		public override DateTime GetTimestamp(Guid comb) {
+#if NET5_0_OR_GREATER || NETSTANDARD2_1
+			Span<byte> gbytes = stackalloc byte[16];
+			comb.TryWriteBytes(gbytes);
+#else
 			var gbytes = comb.ToByteArray();
-			var dbytes = new byte[_dateTimeStrategy.NumDateBytes];
+#endif
 			SwapByteOrderForStringOrder(gbytes);
-			Array.Copy(gbytes, 0, dbytes, 0, _dateTimeStrategy.NumDateBytes);
-			return _dateTimeStrategy.BytesToDateTime(dbytes);
+			return _dateTimeStrategy.ReadDateTime(gbytes);
 		}
 
 		// IDateTimeStrategy is required to provide the bytes we need in network byte order, and that's what we want
 		// in PostgreSQL as well. However, internally, GUID bytes for Data1 and Data2 are stored in little endian
 		// order, so we need to reverse one or both of those so the bytes we want are re-reversed to the correct 
 		// order by Npgsql's GUID data type handler.
-		private void SwapByteOrderForStringOrder(byte[] input) {
-			Array.Reverse(input, 0, 4);             // Swap around the first 4 bytes
+		private void SwapByteOrderForStringOrder(Span<byte> input) {
+			input.Slice(0, 4).Reverse();            // Swap around the first 4 bytes
 			if (input.Length == 4) return;
-			Array.Reverse(input, 4, 2);             // Swap around the next 2 bytes
+			input.Slice(4, 2).Reverse();            // Swap around the next 2 bytes
 		}
 
 	}

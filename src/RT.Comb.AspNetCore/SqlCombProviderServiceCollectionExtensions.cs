@@ -22,8 +22,8 @@ namespace RT.Comb.AspNetCore {
 		/// <param name="customGuidProvider"> A delegate to a parameter-less function that returns a Guid value</param>
 		public static void AddSqlCombGuidWithSqlDateTime(
 			this IServiceCollection services,
-			TimestampProvider customTimestampProvider = null,
-			GuidProvider customGuidProvider = null
+			TimestampProvider? customTimestampProvider = null,
+			GuidProvider? customGuidProvider = null
 		) => services.TryAddSingleton<ICombProvider>(
 				AddSqlCombGuid(new SqlDateTimeStrategy(), customTimestampProvider, customGuidProvider));
 
@@ -40,15 +40,15 @@ namespace RT.Comb.AspNetCore {
 		/// <param name="customGuidProvider"> A delegate to a parameter-less function that returns a Guid value</param>
 		public static void AddSqlCombGuidWithUnixDateTime(
 			this IServiceCollection services,
-			TimestampProvider customTimestampProvider = null,
-			GuidProvider customGuidProvider = null
+			TimestampProvider? customTimestampProvider = null,
+			GuidProvider? customGuidProvider = null
 		) => services.TryAddSingleton<ICombProvider>(
 				AddSqlCombGuid(new UnixDateTimeStrategy(), customTimestampProvider, customGuidProvider));
 
 		private static SqlCombProvider AddSqlCombGuid(
 			ICombDateTimeStrategy dateTimeStrategy,
-			TimestampProvider customTimestampProvider,
-			GuidProvider customGuidProvider
+			TimestampProvider? customTimestampProvider,
+			GuidProvider? customGuidProvider
 		) => new SqlCombProvider(dateTimeStrategy, customTimestampProvider, customGuidProvider);
 
 	}

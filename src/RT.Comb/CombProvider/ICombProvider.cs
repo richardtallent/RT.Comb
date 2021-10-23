@@ -49,12 +49,6 @@ namespace RT.Comb {
 		/// <returns>DateTime embedded in <paramref name="value"/></returns>
 		DateTime GetTimestamp(Guid value);
 
-		/// <summary>
-		/// Provides the timestamp value for Create() calls that don't include a timestamp argument.
-		/// </summary>
-		//TimestampProvider TimestampProvider { get; }
-		//GuidProvider GuidProvider { get; }
-
 	}
 
 }
