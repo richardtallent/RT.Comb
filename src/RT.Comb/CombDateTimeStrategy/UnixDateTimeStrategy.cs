@@ -1,6 +1,7 @@
 ﻿using System;
+using System.Buffers.Binary;
 /*
-	Copyright 2015-2020 Richard S. Tallent, II
+	Copyright 2015-2021 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -23,29 +24,28 @@ namespace RT.Comb {
 	/// </summary>
 	public class UnixDateTimeStrategy : ICombDateTimeStrategy {
 
-		public int NumDateBytes { get { return 6; } }
+		private const int FixedNumDateBytes = 6;
+		private const int RemainingBytesFromInt64 = 8 - FixedNumDateBytes;
 
-		public DateTime MinDateTimeValue { get; } = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+		public int NumDateBytes => FixedNumDateBytes;
 
-		public DateTime MaxDateTimeValue { get { return MinDateTimeValue.AddMilliseconds(2 ^ (8 * NumDateBytes)); } }
+		public DateTime MinDateTimeValue { get; } = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
-		public byte[] DateTimeToBytes(DateTime timestamp) {
+		public DateTime MaxDateTimeValue => MinDateTimeValue.AddMilliseconds(2 ^ (8 * NumDateBytes));
+
+		public void WriteDateTime(Span<byte> destination, DateTime timestamp) {
 			var ms = ToUnixTimeMilliseconds(timestamp);
-			var msBytes = BitConverter.GetBytes(ms);
-			if (BitConverter.IsLittleEndian) Array.Reverse(msBytes);
-			var result = new byte[NumDateBytes];
-			var index = msBytes.GetUpperBound(0) + 1 - NumDateBytes;
-			Array.Copy(msBytes, index, result, 0, NumDateBytes);
-			return result;
+			Span<byte> msBytes = stackalloc byte[8];
+			BinaryPrimitives.WriteInt64BigEndian(msBytes, ms);
+			msBytes.Slice(RemainingBytesFromInt64).CopyTo(destination);
 		}
 
-		public DateTime BytesToDateTime(byte[] value) {
+		public DateTime ReadDateTime(ReadOnlySpan<byte> source) {
 			// Attempt to convert the first 6 bytes.
-			var msBytes = new byte[8];
-			var index = 8 - NumDateBytes;
-			Array.Copy(value, 0, msBytes, index, NumDateBytes);
-			if (BitConverter.IsLittleEndian) Array.Reverse(msBytes);
-			var ms = BitConverter.ToInt64(msBytes, 0);
+			Span<byte> msBytes = stackalloc byte[8];
+			source.Slice(0, FixedNumDateBytes).CopyTo(msBytes.Slice(RemainingBytesFromInt64));
+			msBytes.Slice(0, RemainingBytesFromInt64).Clear();
+			var ms = BinaryPrimitives.ReadInt64BigEndian(msBytes);
 			return FromUnixTimeMilliseconds(ms);
 		}
 

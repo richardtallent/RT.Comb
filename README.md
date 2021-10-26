@@ -252,6 +252,7 @@ Some missing pieces:
 - 2.3.1 2018-06-10 Migrated demo and test apps to netstandard 2.1, downgraded library to netstandard 1.0 for maximum compatibility.
 - 2.4.0 2020-04-23 Bumped to netstandard 2.0. (#16)
 - 2.5.0 2020-12-13 Test package bumped to .NET 5.0. Added .NET Core DI package (#18, thanks @joaopgrassi!).
+- 3.0.0 2021-10-25 Zero-alloc and nullable support (thanks @skarllot!); Switch to production build;
 
 # More Information
 
@@ -263,7 +264,7 @@ http://www.siepman.nl/blog/post/2013/10/28/ID-Sequential-Guid-COMB-Vs-Int-Identi
 
 # License (MIT "Expat")
 
-Copyright 2015-2020 Richard S. Tallent, II
+Copyright 2015-2021 Richard S. Tallent, II
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

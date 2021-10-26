@@ -1,6 +1,6 @@
 ﻿using System;
 /*
-	Copyright 2015-2020 Richard S. Tallent, II
+	Copyright 2015-2021 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -48,12 +48,6 @@ namespace RT.Comb {
 		/// <param name="value">COMB GUID</param>
 		/// <returns>DateTime embedded in <paramref name="value"/></returns>
 		DateTime GetTimestamp(Guid value);
-
-		/// <summary>
-		/// Provides the timestamp value for Create() calls that don't include a timestamp argument.
-		/// </summary>
-		//TimestampProvider TimestampProvider { get; }
-		//GuidProvider GuidProvider { get; }
 
 	}
 

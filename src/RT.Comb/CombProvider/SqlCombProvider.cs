@@ -1,6 +1,6 @@
 using System;
 /*
-	Copyright 2015-2020 Richard S. Tallent, II
+	Copyright 2015-2021 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -21,20 +21,28 @@ namespace RT.Comb {
 
 		private const int EmbedAtIndex = 10;
 
-		public SqlCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider customTimestampProvider = null, GuidProvider customGuidProvider = null) : base(dateTimeStrategy, customTimestampProvider, customGuidProvider) { }
+		public SqlCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider? customTimestampProvider = null, GuidProvider? customGuidProvider = null) : base(dateTimeStrategy, customTimestampProvider, customGuidProvider) { }
 
 		public override Guid Create(Guid value, DateTime timestamp) {
+#if NET5_0_OR_GREATER || NETSTANDARD2_1
+			Span<byte> gbytes = stackalloc byte[16];
+			value.TryWriteBytes(gbytes);
+			_dateTimeStrategy.WriteDateTime(gbytes.Slice(EmbedAtIndex), timestamp);
+#else
 			var gbytes = value.ToByteArray();
-			var dbytes = _dateTimeStrategy.DateTimeToBytes(timestamp);
-			Array.Copy(dbytes, 0, gbytes, EmbedAtIndex, _dateTimeStrategy.NumDateBytes);
+			_dateTimeStrategy.WriteDateTime(gbytes.AsSpan(EmbedAtIndex), timestamp);
+#endif
 			return new Guid(gbytes);
 		}
 
 		public override DateTime GetTimestamp(Guid comb) {
-			var gbytes = comb.ToByteArray();
-			var dbytes = new byte[_dateTimeStrategy.NumDateBytes];
-			Array.Copy(gbytes, EmbedAtIndex, dbytes, 0, _dateTimeStrategy.NumDateBytes);
-			return _dateTimeStrategy.BytesToDateTime(dbytes);
+#if NET5_0_OR_GREATER || NETSTANDARD2_1
+			Span<byte> gbytes = stackalloc byte[16];
+			comb.TryWriteBytes(gbytes);
+#else
+			Span<byte> gbytes = comb.ToByteArray();
+#endif
+			return _dateTimeStrategy.ReadDateTime(gbytes.Slice(EmbedAtIndex));
 		}
 
 	}

@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using System;
-using System.Reflection;
 using Xunit;
 
 namespace RT.Comb.AspNetCore.Tests {
@@ -23,8 +22,6 @@ namespace RT.Comb.AspNetCore.Tests {
 
 			Assert.NotNull(sqlCombProvider);
 			Assert.IsType<SqlDateTimeStrategy>(TestUtils.GetCurrentDateTimeStrategy(sqlCombProvider));
-			Assert.IsType<TimestampProvider>(sqlCombProvider.TimestampProvider);
-			Assert.IsType<GuidProvider>(sqlCombProvider.GuidProvider);
 		}
 
 		[Fact]
@@ -67,8 +64,6 @@ namespace RT.Comb.AspNetCore.Tests {
 
 			Assert.NotNull(sqlCombProvider);
 			Assert.IsType<UnixDateTimeStrategy>(TestUtils.GetCurrentDateTimeStrategy(sqlCombProvider));
-			Assert.IsType<TimestampProvider>(sqlCombProvider.TimestampProvider);
-			Assert.IsType<GuidProvider>(sqlCombProvider.GuidProvider);
 		}
 
 		[Fact]

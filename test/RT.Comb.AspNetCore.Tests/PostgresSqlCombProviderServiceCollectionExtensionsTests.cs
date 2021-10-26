@@ -22,8 +22,6 @@ namespace RT.Comb.AspNetCore.Tests {
 
 			Assert.NotNull(sqlCombProvider);
 			Assert.IsType<SqlDateTimeStrategy>(TestUtils.GetCurrentDateTimeStrategy(sqlCombProvider));
-			Assert.IsType<TimestampProvider>(sqlCombProvider.TimestampProvider);
-			Assert.IsType<GuidProvider>(sqlCombProvider.GuidProvider);
 		}
 
 		[Fact]
@@ -66,8 +64,6 @@ namespace RT.Comb.AspNetCore.Tests {
 
 			Assert.NotNull(sqlCombProvider);
 			Assert.IsType<UnixDateTimeStrategy>(TestUtils.GetCurrentDateTimeStrategy(sqlCombProvider));
-			Assert.IsType<TimestampProvider>(sqlCombProvider.TimestampProvider);
-			Assert.IsType<GuidProvider>(sqlCombProvider.GuidProvider);
 		}
 
 		[Fact]
