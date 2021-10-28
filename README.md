@@ -252,7 +252,7 @@ Some missing pieces:
 - 2.3.1 2018-06-10 Migrated demo and test apps to netstandard 2.1, downgraded library to netstandard 1.0 for maximum compatibility.
 - 2.4.0 2020-04-23 Bumped to netstandard 2.0. (#16)
 - 2.5.0 2020-12-13 Test package bumped to .NET 5.0. Added .NET Core DI package (#18, thanks @joaopgrassi!).
-- 3.0.0 2021-10-25 Zero-alloc and nullable support (thanks @skarllot!); Switch to production build.
+- 3.0.0 2021-10-27 Zero-alloc and nullable support (thanks @skarllot!); Switch to production build.
 
 # More Information
 

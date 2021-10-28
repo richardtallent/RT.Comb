@@ -33,3 +33,4 @@ build/
 /RT.Comb/NuGet
 docs
 artifacts/**/*.*
+.vs/config/*.config
