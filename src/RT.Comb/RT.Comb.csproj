@@ -13,7 +13,7 @@
 		<PackageProjectUrl>https://github.com/richardtallent/RT.Comb</PackageProjectUrl>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<RepositoryUrl>https://github.com/richardtallent/RT.Comb</RepositoryUrl>
-		<TargetFrameworks>net5.0;netstandard2.0;netstandard2.1</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
 		<LangVersion>9</LangVersion>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
@@ -21,6 +21,6 @@
 		<None Include="..\..\RT.Comb.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 	<ItemGroup>
-	  <PackageReference Include="System.Memory" Version="4.5.4" />
+		<PackageReference Include="System.Memory" Version="4.5.4" />
 	</ItemGroup>
 </Project>
