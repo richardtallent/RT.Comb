@@ -6,9 +6,9 @@ namespace RT.Comb.Benchmark.Jobs {
 	[AsciiDocExporter]
 	[MemoryDiagnoser]
 	public class SqlCombProviderJob {
-		private SqlCombProvider provider = new(new UnixDateTimeStrategy());
-		private DateTime baseDateTime = DateTime.UtcNow;
-		private Guid baseGuid = Guid.NewGuid();
+		private readonly SqlCombProvider provider = new(new UnixDateTimeStrategy());
+		private readonly DateTime baseDateTime = DateTime.UtcNow;
+		private readonly Guid baseGuid = Guid.NewGuid();
 
 		[Benchmark]
 		public Guid CreateNew() {

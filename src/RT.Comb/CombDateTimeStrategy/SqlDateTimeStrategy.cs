@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Buffers.Binary;
 /*
-	Copyright 2015-2021 Richard S. Tallent, II
+	Copyright 2015-2022 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -41,13 +41,13 @@ namespace RT.Comb {
 			// which would return .006 if it were integer math, but it returns .007.
 			var ticks = (int)(timestamp.TimeOfDay.TotalMilliseconds * TicksPerMillisecond);
 			var days = (ushort)(timestamp - MinDateTimeValue).TotalDays;
-			BinaryPrimitives.WriteInt32BigEndian(destination.Slice(2), ticks);
+			BinaryPrimitives.WriteInt32BigEndian(destination[2..], ticks);
 			BinaryPrimitives.WriteUInt16BigEndian(destination, days);
 		}
 
 		public DateTime ReadDateTime(ReadOnlySpan<byte> source) {
 			// Attempt to convert the first 6 bytes.
-			ushort days = BinaryPrimitives.ReadUInt16BigEndian(source.Slice(0, 2));
+			ushort days = BinaryPrimitives.ReadUInt16BigEndian(source[..2]);
 			double ticks = BinaryPrimitives.ReadInt32BigEndian(source.Slice(2, 4));
 
 			if (ticks < 0) {

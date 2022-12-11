@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Buffers.Binary;
 /*
-	Copyright 2015-2021 Richard S. Tallent, II
+	Copyright 2015-2022 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -37,28 +37,21 @@ namespace RT.Comb {
 			var ms = ToUnixTimeMilliseconds(timestamp);
 			Span<byte> msBytes = stackalloc byte[8];
 			BinaryPrimitives.WriteInt64BigEndian(msBytes, ms);
-			msBytes.Slice(RemainingBytesFromInt64).CopyTo(destination);
+			msBytes[RemainingBytesFromInt64..].CopyTo(destination);
 		}
 
 		public DateTime ReadDateTime(ReadOnlySpan<byte> source) {
 			// Attempt to convert the first 6 bytes.
 			Span<byte> msBytes = stackalloc byte[8];
-			source.Slice(0, FixedNumDateBytes).CopyTo(msBytes.Slice(RemainingBytesFromInt64));
-			msBytes.Slice(0, RemainingBytesFromInt64).Clear();
+			source[..FixedNumDateBytes].CopyTo(msBytes[RemainingBytesFromInt64..]);
+			msBytes[..RemainingBytesFromInt64].Clear();
 			var ms = BinaryPrimitives.ReadInt64BigEndian(msBytes);
 			return FromUnixTimeMilliseconds(ms);
 		}
 
-		// From private DateTime.TicksPerMillisecond
-		private const long TicksPerMillisecond = 10000;
+		public long ToUnixTimeMilliseconds(DateTime timestamp) => (long)(timestamp.ToUniversalTime() - MinDateTimeValue).TotalMilliseconds;
 
-		// We purposefully are not using the FromUnixTimeMilliseconds and ToUnixTimeMilliseconds to remain compatible with .NET 4.5.1
-		//(long)(timestamp.ToUniversalTime() - MinDateTimeValue).TotalMilliseconds;
-		//public DateTime FromUnixTimeMilliseconds(long ms) => MinDateTimeValue.AddMilliseconds(ms);
-
-		public long ToUnixTimeMilliseconds(DateTime timestamp) => (timestamp.Ticks - MinDateTimeValue.Ticks) / TicksPerMillisecond;
-
-		public DateTime FromUnixTimeMilliseconds(long ms) => MinDateTimeValue.AddTicks(ms * TicksPerMillisecond);
+		public DateTime FromUnixTimeMilliseconds(long ms) => MinDateTimeValue.AddMilliseconds(ms);
 
 	}
 

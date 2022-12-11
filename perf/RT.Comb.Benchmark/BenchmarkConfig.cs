@@ -25,8 +25,8 @@ namespace RT.Comb.Benchmark {
 
 			var baseJob = Job.Default;
 			AddJob(
-				baseJob.WithNuGet("RT.Comb", "2.5.0").WithId("2.5.0"),
-				baseJob.WithNuGet("RT.Comb", "3.0.0").WithId("3.0.0"));
+				baseJob.WithNuGet("RT.Comb", "3.0.0").WithId("2.0.0"),
+				baseJob.WithNuGet("RT.Comb", "4.0.0").WithId("4.0.0"));
 		}
 
 		private static string GetArtifactsPath() {

@@ -1,6 +1,6 @@
 using System;
 /*
-	Copyright 2015-2021 Richard S. Tallent, II
+	Copyright 2015-2022 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -22,17 +22,17 @@ namespace RT.Comb {
 	public class UtcNoRepeatTimestampProvider {
 
 		private DateTime lastValue = DateTime.MinValue;
-		private object locker = new object();
-		
+		private readonly object locker = new();
+
 		// By default, increment any subsequent requests by 4ms, which overcomes the resolution of 1/300s of SqlDateTimeStrategy
 		// If using UnixDateTimeStrategy, you can set this to as low as 1ms.
 		public double IncrementMs { get; set; } = 4;
 
 		public DateTime GetTimestamp() {
 			var now = DateTime.UtcNow;
-			lock(locker) {
+			lock (locker) {
 				// Ensure the time difference between the last value and this one is at least the increment threshold
-				if((now - lastValue).TotalMilliseconds < IncrementMs) {
+				if ((now - lastValue).TotalMilliseconds < IncrementMs) {
 					// now is too close to the last value, use the value with minimum distance from lastValue
 					now = lastValue.AddMilliseconds(IncrementMs);
 				}

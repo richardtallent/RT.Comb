@@ -1,6 +1,6 @@
 using System;
 /*
-	Copyright 2015-2021 Richard S. Tallent, II
+	Copyright 2015-2022 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -22,24 +22,16 @@ namespace RT.Comb {
 		public PostgreSqlCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider? customTimestampProvider = null, GuidProvider? customGuidProvider = null) : base(dateTimeStrategy, customTimestampProvider, customGuidProvider) { }
 
 		public override Guid Create(Guid value, DateTime timestamp) {
-#if NET5_0_OR_GREATER || NETSTANDARD2_1
 			Span<byte> gbytes = stackalloc byte[16];
 			value.TryWriteBytes(gbytes);
-#else
-			var gbytes = value.ToByteArray();
-#endif
 			_dateTimeStrategy.WriteDateTime(gbytes, timestamp);
 			SwapByteOrderForStringOrder(gbytes);
 			return new Guid(gbytes);
 		}
 
 		public override DateTime GetTimestamp(Guid comb) {
-#if NET5_0_OR_GREATER || NETSTANDARD2_1
 			Span<byte> gbytes = stackalloc byte[16];
 			comb.TryWriteBytes(gbytes);
-#else
-			var gbytes = comb.ToByteArray();
-#endif
 			SwapByteOrderForStringOrder(gbytes);
 			return _dateTimeStrategy.ReadDateTime(gbytes);
 		}
@@ -49,7 +41,7 @@ namespace RT.Comb {
 		// order, so we need to reverse one or both of those so the bytes we want are re-reversed to the correct 
 		// order by Npgsql's GUID data type handler.
 		private void SwapByteOrderForStringOrder(Span<byte> input) {
-			input.Slice(0, 4).Reverse();            // Swap around the first 4 bytes
+			input[..4].Reverse();            // Swap around the first 4 bytes
 			if (input.Length == 4) return;
 			input.Slice(4, 2).Reverse();            // Swap around the next 2 bytes
 		}

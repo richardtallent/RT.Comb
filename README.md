@@ -1,11 +1,13 @@
-# Purpose
+# RT.COMB
+
+## Purpose
 
 This small .NET Core library does two things:
 
 1. generates "COMB" `Guid` values in C#; and,
 2. extracts the `DateTime` value from an existing COMB `Guid`.
 
-# Background
+## Background
 
 When GUIDs (`uniqueidentifier` values in MSSQL parlance, `UUID` in PostgreSQL) are part of a database index, and particularly when they are part of the clustered index, the randomness of new values can reduce performance when inserting new values.
 
@@ -15,9 +17,9 @@ But back in 2002, in an article for InformIT, Jimmy Nilsson described the "COMB"
 
 This library implements several modern variations, as well as the original technique.
 
-# Simple Usage
+## Simple Usage
 
-A NuGet package is available, targeted for .NET Standard 2.0 (.NET Core 2.0 or .NET 4.6.1):
+A NuGet package is available, targeted for .NET Standard 2.1 (.NET 6.0+):
 
 https://www.nuget.org/packages/RT.Comb/
 
@@ -34,7 +36,7 @@ Each of these has only **two public methods**:
 
 An example console application using the `Sql` version is provided in the `demo` folder showing a minimal-code use of both of these methods.
 
-# Advanced Usage
+## Advanced Usage
 
 If the default implementations don't work for you, you can roll your own, either changing up how the timestamp is determined, or changing how it is inserted into the GUID.
 
@@ -52,7 +54,7 @@ Both take an `IDateTimeStrategy` argument in their constructor. Two strategies a
 
 You can implement either of these interfaces on your own, or both, to suit your needs.
 
-# Gory Details about UUIDs and GUIDs
+## Gory Details about UUIDs and GUIDs
 
 _(For a more comprehensive treatment, see Wikipedia.)_
 
@@ -74,11 +76,11 @@ Npgsql, the standard .NET library for working with PostgreSQL databases, reads i
 
 https://github.com/npgsql/npgsql/blob/4ef74fa78cffbb4b1fdac00601d0ee5bff5e242b/src/Npgsql/TypeHandlers/UuidHandler.cs
 
-# IDateTimeStrategy
+## IDateTimeStrategy
 
 `IDateTimeStrategy` implementations are responsible for returning a byte array, most significant byte first, representing the timestamp. This byte order is independent of whatever swapping we might have to do to embed the value in a GUID at a certain index. They can return either 4 or 6 bytes, both built-in implementations use 6 bytes.
 
-## UnixDateTimeStrategy
+### UnixDateTimeStrategy
 
 This implementation was inspired by work done on the Marten project, which uses a modified version of RT.Comb. This also returns 6 bytes, but as a 48-bit unsigned integer representing the number of _milliseconds_ since the UNIX epoch date (1970-01-01). Since this method is far more space-efficient than the MSSQL `datetime` structure, it will cover you well into the 85th Century. This is the recommended implementation.
 
@@ -115,7 +117,7 @@ DECLARE @leftoverMs INT = @msSinceEpoch - @daysSinceEpoch * 24 * 60 * 60 * 1000;
 SELECT DATEADD(MILLISECOND, @leftoverMs, DATEADD(DAY, @daysSinceEpoch, '1970-01-01'));
 ```
 
-## SqlDateTimeStrategy
+### SqlDateTimeStrategy
 
 This strategy returns bytes for a timestamp with _part_ of an MSSQL `datetime` value. The `datetime` type in MSSQL is an 8-byte structure. The first four bytes are a _signed_ integer representing the number of days since January 1, 1900. Negative values are permitted to go back to `1752-01-01` (for Reasons), and positive values are permitted through `9999-12-12`. The remaining four bytes represent the time as the number of unsigned 300ths of a second since midnight. Since a day is always 24 hours, this integer never uses more than 25 bits.
 
@@ -125,7 +127,7 @@ If you use this in conjunction with `SqlCombProvider`, your COMB values will be 
 
 Creating a COMB `uniqueidentifier` in T-SQL with the current date and time:
 
-```SQL
+```sql
 DECLARE @value DATETIME = '2002-01-10 23:40:35'
 
 SELECT CAST(
@@ -138,7 +140,7 @@ SELECT CAST(
 
 Extracting a `datetime` value from a COMB `uniqueidentifier` created using the above T-SQL:
 
-```SQL
+```sql
 DECLARE @value UNIQUEIDENTIFIER = 'E25AFE33-DB2D-4502-9BF0-919001862CC4'
 
 SELECT CAST(
@@ -149,7 +151,7 @@ SELECT CAST(
 -- 2002-01-10 23:40:35.000
 ```
 
-# ICombProvider
+## ICombProvider
 
 Regardless which strategy is used for encoding the timestamp, we need to overwrite the portion of the GUID that is sorted _first_, so our GUIDs are sortable in date/time order and minimize index page splits. This differs by database platform.
 
@@ -161,7 +163,7 @@ Here is a fiddler illustrating some of this:
 
 https://dotnetfiddle.net/rW9vt7
 
-## SqlCombProvider
+### SqlCombProvider
 
 As mentioned above, MSSQL sorts the _last_ 6 bytes first, left to right, so we plug our timestamp into the GUID structure starting at the 11th byte, most significant byte first:
 
@@ -172,7 +174,7 @@ As mentioned above, MSSQL sorts the _last_ 6 bytes first, left to right, so we p
     V = variant
     x = random
 
-## PostgreSqlCombProvider
+### PostgreSqlCombProvider
 
 For PostgreSQL, the _first_ bytes are sorted first, so those are the ones we want to overwrite.
 
@@ -186,11 +188,11 @@ Recall that `System.Guid` stores its bytes for `Data1` and `Data2` in a differen
 
 **This is a breaking change for RT.Comb v.1.4.** In prior versions, I wasn't actually able to test on PostgreSQL and got this all wrong, along with misplacing where the version nybble was and doing unnecessary bit-gymnastics to avoid overwriting it. My error was kindly pointed out by Barry Hagan and has been fixed.
 
-## Note about entropy
+### Note about entropy
 
 The default implementations overwrite 48 bits of random data with the timestamp, and another 6 bits are also pre-determined (the version and variant). This still leaves 74 random bits per unit of time (1/300th of a second for SqlDateTimeStrategy, 1/1000th of a second for UnixDateTimeStrategy). This provides well beyond a reasonable amount of protection against collision.
 
-# TimestampProvider / GuidProvider
+## TimestampProvider / GuidProvider
 
 By default, SqlCombProvider and PostgreSqlCombProvider use `DateTime.UtcNow` when a timestamp argument is not provided for `Create()`. If you want the convenience of using `Create` with fewer arguments but need to choose the timestamp another way, you can set the `TimestampProvider` delegate to a parameter-less function that returns a `DateTime` value. Another delegate, `GuidProvider`, provides the same functionality for overriding how the base GUID is created.
 
@@ -213,7 +215,7 @@ Note that you're trading a "time slip" of a few milliseconds during high insert 
 
 To use this workaround, you'll need to create your own ICombProvider instance rather than using the built-in static instances in `RT.Comb.Provider`, and pass this delegate in the provider constructor. You can find an example of this in the test suite.
 
-# How To Contribute
+## How To Contribute
 
 Some missing pieces:
 
@@ -222,7 +224,7 @@ Some missing pieces:
 - Please use the same style (tabs, same-line opening braces, compact line spacing, etc.)
 - Please keep project/solution files compatible with Visual Studio Code.
 
-# Security and Performance
+## Security and Performance
 
 (1) It's a good idea to always use UTC date/time values for COMBs, so they remain highly sequential regardless of server locale or daylight savings, etc. This is even more important if the values will be generated on multiple machines that may have different time zone settings.
 
@@ -236,7 +238,7 @@ Some missing pieces:
 
 (6) As described under `UtcNoRepeatTimestampProvider`, timestamps are only as precise as the timer resolution, so unless you use the aforementioned functionality to work around this, COMBs generated within the same timestamp period are not guaranteed to sort in the order of generation.
 
-# Revision History
+## Revision History
 
 - 1.1.0 2016-01 First release
 - 1.2.0 2016-01 Clean up, add unit tests, published on NuGet
@@ -253,8 +255,9 @@ Some missing pieces:
 - 2.4.0 2020-04-23 Bumped to netstandard 2.0. (#16)
 - 2.5.0 2020-12-13 Test package bumped to .NET 5.0. Added .NET Core DI package (#18, thanks @joaopgrassi!).
 - 3.0.0 2021-10-27 Zero-alloc and nullable support (thanks @skarllot!); Switch to production build.
+- 4.0.0 2022-12-11 Drop .NET 5 and .NET Framework support. Please continue to use v3.0 if you are still supporting these. Minor updates to bump versions and take advantage of newer C# features.
 
-# More Information
+## More Information
 
 The original COMB article:
 http://www.informit.com/articles/article.aspx?p=25862
@@ -262,9 +265,9 @@ http://www.informit.com/articles/article.aspx?p=25862
 Another implementation (not compatible):
 http://www.siepman.nl/blog/post/2013/10/28/ID-Sequential-Guid-COMB-Vs-Int-Identity-using-Entity-Framework.aspx
 
-# License (MIT "Expat")
+## License (MIT "Expat")
 
-Copyright 2015-2021 Richard S. Tallent, II
+Copyright 2015-2022 Richard S. Tallent, II
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

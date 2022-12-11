@@ -6,10 +6,10 @@ namespace RT.CombTests {
 
 	public class MainTests {
 
-		private static UtcNoRepeatTimestampProvider NoDupeProvider = new UtcNoRepeatTimestampProvider();
+		private readonly static UtcNoRepeatTimestampProvider NoDupeProvider = new();
 
-		private ICombProvider SqlNoRepeatCombs = new SqlCombProvider(new SqlDateTimeStrategy(), customTimestampProvider: NoDupeProvider.GetTimestamp);
-		private UnixDateTimeStrategy UnixStrategy = new UnixDateTimeStrategy();
+		private readonly ICombProvider SqlNoRepeatCombs = new SqlCombProvider(new SqlDateTimeStrategy(), customTimestampProvider: NoDupeProvider.GetTimestamp);
+		private readonly UnixDateTimeStrategy UnixStrategy = new();
 
 		/// <summary>
 		/// Ensure that the date provided to be injected into a GUID is the same date we get back from it.
@@ -41,7 +41,7 @@ namespace RT.CombTests {
 		/// Allowed for an optional resolution loss in the time. Calculates the delta using ticks to
 		/// avoid floating point drift in using TotalMilliseconds.
 		/// </summary>
-		private void IsReversible(ICombProvider Comb, int ClockDriftAllowedMs) {
+		private static void IsReversible(ICombProvider Comb, int ClockDriftAllowedMs) {
 			var dt = DateTime.UtcNow;
 			var comb = Comb.Create(dt);
 			var dtDecoded = Comb.GetTimestamp(comb);
@@ -52,8 +52,8 @@ namespace RT.CombTests {
 		/// <summary>
 		/// Utility test function to return a GUID where the majority of the bits are set to 1.
 		/// </summary>
-		private Guid MaxGuid() =>
-			new Guid(int.MaxValue, short.MaxValue, short.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue);
+		private static Guid MaxGuid() =>
+			new(int.MaxValue, short.MaxValue, short.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue, byte.MaxValue);
 
 		/// <summary>
 		/// Ensure that SQL Server will sort our COMB values in date/time order, without regard for

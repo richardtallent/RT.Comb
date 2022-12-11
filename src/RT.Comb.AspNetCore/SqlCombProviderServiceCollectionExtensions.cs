@@ -49,7 +49,7 @@ namespace RT.Comb.AspNetCore {
 			ICombDateTimeStrategy dateTimeStrategy,
 			TimestampProvider? customTimestampProvider,
 			GuidProvider? customGuidProvider
-		) => new SqlCombProvider(dateTimeStrategy, customTimestampProvider, customGuidProvider);
+		) => new(dateTimeStrategy, customTimestampProvider, customGuidProvider);
 
 	}
 
