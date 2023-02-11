@@ -1,3 +1,5 @@
+<!-- markdownlint-disable-file MD034 -->
+
 # RT.COMB
 
 ## Purpose
@@ -56,13 +58,15 @@ You can implement either of these interfaces on your own, or both, to suit your 
 
 ## Gory Details about UUIDs and GUIDs
 
-_(For a more comprehensive treatment, see Wikipedia.)_
+Note: _(For a more comprehensive treatment, see Wikipedia.)_
 
 Standard UUIDs/GUIDs are 128-bit (16-byte) values, wherein most of those bits hold a random value. When viewed as a string, the bytes are represented in hex in five groups, separated by hyphens:
 
-    xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    version       ^
-    variant            ^
+```text
+xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+version       ^
+variant            ^
+```
 
 Structurally, this breaks down into one 32-bit unsigned integer (`Data1`), two 16-bit unsigned integers (`Data2`, `Data3`), and 8 bytes (`Data4`). The most significant nybble of Data3 (the 7th byte in string order, 8th in the internal bytes of `System.Guid`) is the GUID "version" number--generally 4 (0100b). Also, the most significant 2-3 bits of the first byte of Data4 is the "variant" value. For common GUIDs, the first two of these bits will be `10`, and the third is random. The remaining bits for a version 4 GUID are random.
 
@@ -70,7 +74,9 @@ The UUID standard (RFC 4122) specifies that the `Data1`, `Data2`, and `Data3` in
 
 This means that the bytes you get from `Guid.ToString()` are actually stored in the GUID's internal byte array in the following order:
 
-    33221100-5544-7766-8899-AABBCCDDEEFF
+```text
+33221100-5544-7766-8899-AABBCCDDEEFF
+```
 
 Npgsql, the standard .NET library for working with PostgreSQL databases, reads incoming bytes for these three fields using `GetInt32()` and `GetInt16()`, which assume the bytes are in little-endian form. This ensures that .NET will return the same _string_ as non-.NET tools that show PostgreSQL UUID values, but the bytes inside .NET and inside PostgreSQL are stored in a different order. Reference:
 
@@ -86,32 +92,32 @@ This implementation was inspired by work done on the Marten project, which uses 
 
 Creating a COMB `uniqueidentifier` in T-SQL with the current date and time:
 
-```SQL
+```sql
 DECLARE @now DATETIME = GETUTCDATE();
 DECLARE @daysSinceEpoch BIGINT = DATEDIFF(DAY, '1970-1-1', @now);
 DECLARE @msLeftOver INT = DATEDIFF(MILLISECOND, DATEADD(DAY, @daysSinceEpoch, '1970-1-1'), @now);
 SELECT CAST(
-		CAST(NEWID() AS BINARY(10))
-		+ CAST(@daysSinceEpoch * 24 * 60 * 60 * 1000 + @msLeftOver AS BINARY(6))
-	AS UNIQUEIDENTIFIER);
+        CAST(NEWID() AS BINARY(10))
+        + CAST(@daysSinceEpoch * 24 * 60 * 60 * 1000 + @msLeftOver AS BINARY(6))
+    AS UNIQUEIDENTIFIER);
 ```
 
 Or on MSSQL 2016/Azure:
 
-```SQL
+```sql
 SELECT CAST(
-		CAST(NEWID() AS BINARY(10))
-		+ CAST(DATEDIFF_BIG(MILLISECOND, '1970-1-1', GETUTCDATE())
-	AS BINARY(6)) AS UNIQUEIDENTIFIER);
+        CAST(NEWID() AS BINARY(10))
+        + CAST(DATEDIFF_BIG(MILLISECOND, '1970-1-1', GETUTCDATE())
+    AS BINARY(6)) AS UNIQUEIDENTIFIER);
 ```
 
 Extracting a `datetime` value from a COMB `uniqueidentifier` created using the above T-SQL:
 
 ```SQL
 DECLARE @msSinceEpoch BIGINT = CAST(
-		CAST(0 AS BINARY(2))
-		+ SUBSTRING(CAST(@value AS BINARY(16)), 11, 6)
-	AS BIGINT);
+        CAST(0 AS BINARY(2))
+        + SUBSTRING(CAST(@value AS BINARY(16)), 11, 6)
+    AS BIGINT);
 DECLARE @daysSinceEpoch BIGINT = @msSinceEpoch / 1000 / 60 / 60 / 24;
 DECLARE @leftoverMs INT = @msSinceEpoch - @daysSinceEpoch * 24 * 60 * 60 * 1000;
 SELECT DATEADD(MILLISECOND, @leftoverMs, DATEADD(DAY, @daysSinceEpoch, '1970-01-01'));
@@ -131,9 +137,9 @@ Creating a COMB `uniqueidentifier` in T-SQL with the current date and time:
 DECLARE @value DATETIME = '2002-01-10 23:40:35'
 
 SELECT CAST(
-		CAST(NEWID() AS binary(10))
-		+ CAST(@value AS binary(6))
-	AS uniqueidentifier)
+        CAST(NEWID() AS binary(10))
+        + CAST(@value AS binary(6))
+    AS uniqueidentifier)
 
 --xxxxxxxx-xxxx-xxxx-xxxx-919001862CC4
 ```
@@ -144,9 +150,9 @@ Extracting a `datetime` value from a COMB `uniqueidentifier` created using the a
 DECLARE @value UNIQUEIDENTIFIER = 'E25AFE33-DB2D-4502-9BF0-919001862CC4'
 
 SELECT CAST(
-		CAST(0 AS binary(2))
-		+ SUBSTRING(CAST(@value AS binary(16)), 11, 6)
-	AS datetime)
+        CAST(0 AS binary(2))
+        + SUBSTRING(CAST(@value AS binary(16)), 11, 6)
+    AS datetime)
 
 -- 2002-01-10 23:40:35.000
 ```
@@ -167,22 +173,26 @@ https://dotnetfiddle.net/rW9vt7
 
 As mentioned above, MSSQL sorts the _last_ 6 bytes first, left to right, so we plug our timestamp into the GUID structure starting at the 11th byte, most significant byte first:
 
-    00112233-4455-6677-8899-AABBCCDDEEFF
-    xxxxxxxx xxxx 4xxx Vxxx MMMMMMMMMMMM  UnixDateTimeStrategy, milliseconds
-    xxxxxxxx xxxx 4xxx Vxxx DDDDTTTTTTTT  SqlDateTimeStrategy, days and 1/300s
-    4 = version
-    V = variant
-    x = random
+```text
+00112233-4455-6677-8899-AABBCCDDEEFF
+xxxxxxxx xxxx 4xxx Vxxx MMMMMMMMMMMM  UnixDateTimeStrategy, milliseconds
+xxxxxxxx xxxx 4xxx Vxxx DDDDTTTTTTTT  SqlDateTimeStrategy, days and 1/300s
+4 = version
+V = variant
+x = random
+```
 
 ### PostgreSqlCombProvider
 
 For PostgreSQL, the _first_ bytes are sorted first, so those are the ones we want to overwrite.
 
-    MMMMMMMM MMMM 4xxx Vxxx xxxxxxxxxxxx  UnixDateTimeStrategy, milliseconds
-    DDDDTTTT TTTT 4xxx Vxxx xxxxxxxxxxxx  SqlDateTimeStrategy, days and 1/300s
-    4 = version
-    V = variant
-    x = random
+```text
+MMMMMMMM MMMM 4xxx Vxxx xxxxxxxxxxxx  UnixDateTimeStrategy, milliseconds
+DDDDTTTT TTTT 4xxx Vxxx xxxxxxxxxxxx  SqlDateTimeStrategy, days and 1/300s
+4 = version
+V = variant
+x = random
+```
 
 Recall that `System.Guid` stores its bytes for `Data1` and `Data2` in a different order than they are shown, so we have to reverse the bytes we're putting into those areas so they are stored and sorted in PostgreSQL in network-byte order.
 
@@ -204,12 +214,14 @@ This won't result in a database collision--the remaining random bits in the GUID
 
 If your sort order must be guaranteed, I've come up with a workaround -- a `TimestampProvider` delegate called `UtcNoRepeatTimestampProvider.GetTimestamp`. This method checks to ensure that the current time is at least `IncrementMs` milliseconds more recent than the previous value it generated. If not, it returns the previous value plus `IncrementMs` instead. Either way, it then keeps track of what it returned for the next round. This checking is thread-safe. By default, `IncrementMs` is set to 4ms, which is sufficient to ensure that `SqlDateTimeStrategy` timestamp values won't collide (which has a ~3ms resolution). If you're using `UnixDateTimeStrategy`, you can optionally set this to a lower value (such as 1ms) instead. The table below shows some examples values you might get from `DateTime.UtcNow` in a tight loop vs. what `UtcNoRepeatTimestampProvider` would return:
 
-    02:08:50.613    02:08:50.613
-    02:08:50.613    02:08:50.617
-    02:08:50.613    02:08:50.621
-    02:08:50.617    02:08:50.625
-    02:08:50.617    02:08:50.629
-    02:08:50.617    02:08:50.632
+```text
+02:08:50.613    02:08:50.613
+02:08:50.613    02:08:50.617
+02:08:50.613    02:08:50.621
+02:08:50.617    02:08:50.625
+02:08:50.617    02:08:50.629
+02:08:50.617    02:08:50.632
+```
 
 Note that you're trading a "time slip" of a few milliseconds during high insert rates for a guarantee that the `UtcNoRepeatTimestampProvider` won't repeat its timestamp, so COMBs will always sort exactly in insert order. This is fine if your transaction rate just has occasional bumps, but if you're constantly writing thousands of records per second, the time slip could accumulate into something real, especially with the 4ms default increment.
 
@@ -256,6 +268,7 @@ Some missing pieces:
 - 2.5.0 2020-12-13 Test package bumped to .NET 5.0. Added .NET Core DI package (#18, thanks @joaopgrassi!).
 - 3.0.0 2021-10-27 Zero-alloc and nullable support (thanks @skarllot!); Switch to production build.
 - 4.0.0 2022-12-11 Drop .NET 5 and .NET Framework support. Please continue to use v3.0 if you are still supporting these. Minor updates to bump versions and take advantage of newer C# features.
+- 4.0.1 2023-02-11 Move back to .NET 6 version of DI for now for better compatibility. (#26)
 
 ## More Information
 
@@ -267,7 +280,7 @@ http://www.siepman.nl/blog/post/2013/10/28/ID-Sequential-Guid-COMB-Vs-Int-Identi
 
 ## License (MIT "Expat")
 
-Copyright 2015-2022 Richard S. Tallent, II
+Copyright 2015-2023 Richard S. Tallent, II
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

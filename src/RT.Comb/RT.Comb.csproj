@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<Description>Library to create and use COMB (timestamped sequential) GUID variants for Microsoft SQL Server and PostgreSQL. See the GitHub site for more details.</Description>
-		<Copyright>Copyright 2015-2022 Richard S. Tallent</Copyright>
+		<Copyright>Copyright 2015-2023 Richard S. Tallent</Copyright>
 		<AssemblyTitle>RT.Comb</AssemblyTitle>
-		<VersionPrefix>4.0.0</VersionPrefix>
+		<VersionPrefix>4.0.1</VersionPrefix>
 		<Authors>Richard Tallent</Authors>
 		<PlatformTarget>anycpu</PlatformTarget>
 		<AssemblyName>RT.Comb</AssemblyName>
@@ -16,9 +16,11 @@
 		<TargetFrameworks>netstandard2.1</TargetFrameworks>
 		<LangVersion>11</LangVersion>
 		<Nullable>enable</Nullable>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 	<ItemGroup>
 		<None Include="..\..\RT.Comb.png" Pack="true" PackagePath="\" />
+		<None Include="..\..\README.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="System.Memory" Version="4.5.5" />

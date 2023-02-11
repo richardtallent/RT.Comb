@@ -6,7 +6,7 @@ This package is a wrapper to make it easy to use RT.Comb in ASP.NET Core applica
 
 Install the package in the ASP.NET Core application:
 
-```
+```shell
 dotnet add package RT.Comb.AspNetCore
 ```
 
