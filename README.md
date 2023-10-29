@@ -269,6 +269,7 @@ Some missing pieces:
 - 3.0.0 2021-10-27 Zero-alloc and nullable support (thanks @skarllot!); Switch to production build.
 - 4.0.0 2022-12-11 Drop .NET 5 and .NET Framework support. Please continue to use v3.0 if you are still supporting these. Minor updates to bump versions and take advantage of newer C# features.
 - 4.0.1 2023-02-11 Move back to .NET 6 version of DI for now for better compatibility. (#26)
+- (Unreleased) 2023-10-28: Drop .NET 6, bump othe dependencies.
 
 ## More Information
 
