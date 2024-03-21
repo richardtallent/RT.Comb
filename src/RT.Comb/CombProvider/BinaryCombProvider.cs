@@ -1,5 +1,6 @@
+using System;
 /*
-	Copyright 2015-2023 Richard S. Tallent, II
+	Copyright 2015-2021 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -16,12 +17,31 @@
 
 namespace RT.Comb {
 
-	public static class Provider {
-		public static readonly ICombProvider Legacy = new SqlCombProvider(new SqlDateTimeStrategy());
-		public static readonly ICombProvider Sql = new SqlCombProvider(new UnixDateTimeStrategy());
-		public static readonly ICombProvider PostgreSql = new PostgreSqlCombProvider(new UnixDateTimeStrategy());
-		public static readonly ICombProvider Oracle = new BinaryCombProvider(new UnixDateTimeStrategy());
-		public static readonly ICombProvider SqliteBinary = new BinaryCombProvider(new UnixDateTimeStrategy());
+	public class BinaryCombProvider : BaseCombProvider {
+
+		public BinaryCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider? customTimestampProvider = null, GuidProvider? customGuidProvider = null) : base(dateTimeStrategy, customTimestampProvider, customGuidProvider) { }
+
+		public override Guid Create(Guid value, DateTime timestamp) {
+#if NET5_0_OR_GREATER || NETSTANDARD2_1
+			Span<byte> gbytes = stackalloc byte[16];
+			value.TryWriteBytes(gbytes);
+#else
+			var gbytes = value.ToByteArray();
+#endif
+			_dateTimeStrategy.WriteDateTime(gbytes, timestamp);
+			return new Guid(gbytes);
+		}
+
+		public override DateTime GetTimestamp(Guid comb) {
+#if NET5_0_OR_GREATER || NETSTANDARD2_1
+			Span<byte> gbytes = stackalloc byte[16];
+			comb.TryWriteBytes(gbytes);
+#else
+			var gbytes = comb.ToByteArray();
+#endif
+			return _dateTimeStrategy.ReadDateTime(gbytes);
+		}
+
 	}
 
 }
