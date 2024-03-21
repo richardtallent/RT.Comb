@@ -56,6 +56,23 @@ Both take an `IDateTimeStrategy` argument in their constructor. Two strategies a
 
 You can implement either of these interfaces on your own, or both, to suit your needs.
 
+## Database-side generation/decoding
+
+This repository includes an `sql` folder containing scripts for two SQL Server 2016+ functions that implement `UnixDateTimeStrategy`:
+
+- [NewComb](./sql/NewComb.sql): Generates a new COMB value; and
+- [DateFromComb](./sql/DateFromComb.sql): Extracts the `DATETIME2` timestamp value from an existing COMB value.
+
+The logic in these functions is fully compatible with the .NET code in this library.
+
+_(I would be happy to accept a testable PR to add PostgreSql functions.)_
+
+If you need similar functions for the `SqlDateTimeStrategy`, those are included as well as [NewCombLegacy](./sql/NewCombLegacy.sql) and [DateFromCombLegacy](./sql/DateFromCombLegacy.sql).
+
+Both of the COMB-generation functions rely on a view, [vwNewGuid](./sql/vwNewGuid.sql), since `NEWID()` is non-deterministic and can't be called directly from within a function.
+
+_If you need to support SQL Server versions prior to 2016, look at the commit history for this README file, it contains older versions of the code that support some older versions._
+
 ## Gory Details about UUIDs and GUIDs
 
 Note: _(For a more comprehensive treatment, see Wikipedia.)_
@@ -90,39 +107,6 @@ https://github.com/npgsql/npgsql/blob/4ef74fa78cffbb4b1fdac00601d0ee5bff5e242b/s
 
 This implementation was inspired by work done on the Marten project, which uses a modified version of RT.Comb. This also returns 6 bytes, but as a 48-bit unsigned integer representing the number of _milliseconds_ since the UNIX epoch date (1970-01-01). Since this method is far more space-efficient than the MSSQL `datetime` structure, it will cover you well into the 85th Century. This is the recommended implementation.
 
-Creating a COMB `uniqueidentifier` in T-SQL with the current date and time:
-
-```sql
-DECLARE @now DATETIME = GETUTCDATE();
-DECLARE @daysSinceEpoch BIGINT = DATEDIFF(DAY, '1970-1-1', @now);
-DECLARE @msLeftOver INT = DATEDIFF(MILLISECOND, DATEADD(DAY, @daysSinceEpoch, '1970-1-1'), @now);
-SELECT CAST(
-        CAST(NEWID() AS BINARY(10))
-        + CAST(@daysSinceEpoch * 24 * 60 * 60 * 1000 + @msLeftOver AS BINARY(6))
-    AS UNIQUEIDENTIFIER);
-```
-
-Or on MSSQL 2016/Azure:
-
-```sql
-SELECT CAST(
-        CAST(NEWID() AS BINARY(10))
-        + CAST(DATEDIFF_BIG(MILLISECOND, '1970-1-1', GETUTCDATE())
-    AS BINARY(6)) AS UNIQUEIDENTIFIER);
-```
-
-Extracting a `datetime` value from a COMB `uniqueidentifier` created using the above T-SQL:
-
-```SQL
-DECLARE @msSinceEpoch BIGINT = CAST(
-        CAST(0 AS BINARY(2))
-        + SUBSTRING(CAST(@value AS BINARY(16)), 11, 6)
-    AS BIGINT);
-DECLARE @daysSinceEpoch BIGINT = @msSinceEpoch / 1000 / 60 / 60 / 24;
-DECLARE @leftoverMs INT = @msSinceEpoch - @daysSinceEpoch * 24 * 60 * 60 * 1000;
-SELECT DATEADD(MILLISECOND, @leftoverMs, DATEADD(DAY, @daysSinceEpoch, '1970-01-01'));
-```
-
 ### SqlDateTimeStrategy
 
 This strategy returns bytes for a timestamp with _part_ of an MSSQL `datetime` value. The `datetime` type in MSSQL is an 8-byte structure. The first four bytes are a _signed_ integer representing the number of days since January 1, 1900. Negative values are permitted to go back to `1752-01-01` (for Reasons), and positive values are permitted through `9999-12-12`. The remaining four bytes represent the time as the number of unsigned 300ths of a second since midnight. Since a day is always 24 hours, this integer never uses more than 25 bits.
@@ -130,32 +114,6 @@ This strategy returns bytes for a timestamp with _part_ of an MSSQL `datetime` v
 For the COMB, we use all four bytes of the time and two bytes of the date. This means our date has no sign bit and has a maximum value of 65,535, limiting our date range to January 1, 1900 through June 5, 2079 -- a very reasonable spread.
 
 If you use this in conjunction with `SqlCombProvider`, your COMB values will be compatible with the original COMB article, and you can easily use plain T-SQL to encode and decode the timestamps without requiring .NET (the overhead for doing this in T-SQL is minimal):
-
-Creating a COMB `uniqueidentifier` in T-SQL with the current date and time:
-
-```sql
-DECLARE @value DATETIME = '2002-01-10 23:40:35'
-
-SELECT CAST(
-        CAST(NEWID() AS binary(10))
-        + CAST(@value AS binary(6))
-    AS uniqueidentifier)
-
---xxxxxxxx-xxxx-xxxx-xxxx-919001862CC4
-```
-
-Extracting a `datetime` value from a COMB `uniqueidentifier` created using the above T-SQL:
-
-```sql
-DECLARE @value UNIQUEIDENTIFIER = 'E25AFE33-DB2D-4502-9BF0-919001862CC4'
-
-SELECT CAST(
-        CAST(0 AS binary(2))
-        + SUBSTRING(CAST(@value AS binary(16)), 11, 6)
-    AS datetime)
-
--- 2002-01-10 23:40:35.000
-```
 
 ## ICombProvider
 
@@ -197,6 +155,14 @@ x = random
 Recall that `System.Guid` stores its bytes for `Data1` and `Data2` in a different order than they are shown, so we have to reverse the bytes we're putting into those areas so they are stored and sorted in PostgreSQL in network-byte order.
 
 **This is a breaking change for RT.Comb v.1.4.** In prior versions, I wasn't actually able to test on PostgreSQL and got this all wrong, along with misplacing where the version nybble was and doing unnecessary bit-gymnastics to avoid overwriting it. My error was kindly pointed out by Barry Hagan and has been fixed.
+
+### Comparing COMB to UUIDv7
+
+Here is more information on UUIDv7: https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-04.html#v7
+
+`PostgreSqlCombProvider` with the default `UnixDateTimeStrategy` (above) is compatible with UUIDv7.
+
+However, while `SqlCombProvider` with the default `UnixDateTimeStrategy` also uses a 48-bit UNIX timestamp, the location of the timestamp bytes is different, based on how SQL Server sorts `UNIQUEIDENTIFIER` values.
 
 ### Note about entropy
 
@@ -269,7 +235,8 @@ Some missing pieces:
 - 3.0.0 2021-10-27 Zero-alloc and nullable support (thanks @skarllot!); Switch to production build.
 - 4.0.0 2022-12-11 Drop .NET 5 and .NET Framework support. Please continue to use v3.0 if you are still supporting these. Minor updates to bump versions and take advantage of newer C# features.
 - 4.0.1 2023-02-11 Move back to .NET 6 version of DI for now for better compatibility. (#26)
-- (Unreleased) 2023-10-28: Drop .NET 6, bump othe dependencies.
+- (Unreleased) 2023-10-28: Drop .NET 6, bump the dependencies.
+- (Unreleased) 2024-03-20: Move SQL code to separate files (thanks for the idea, @Reikooters! #29)
 
 ## More Information
 
@@ -281,7 +248,7 @@ http://www.siepman.nl/blog/post/2013/10/28/ID-Sequential-Guid-COMB-Vs-Int-Identi
 
 ## License (MIT "Expat")
 
-Copyright 2015-2023 Richard S. Tallent, II
+Copyright 2015-2024 Richard S. Tallent, II
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
