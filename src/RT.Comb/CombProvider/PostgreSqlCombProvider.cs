@@ -1,6 +1,6 @@
 using System;
 /*
-	Copyright 2015-2023 Richard S. Tallent, II
+	Copyright 2015-2025 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -17,14 +17,16 @@ using System;
 
 namespace RT.Comb {
 
-	public class PostgreSqlCombProvider : BaseCombProvider {
-
-		public PostgreSqlCombProvider(ICombDateTimeStrategy dateTimeStrategy, TimestampProvider? customTimestampProvider = null, GuidProvider? customGuidProvider = null) : base(dateTimeStrategy, customTimestampProvider, customGuidProvider) { }
+	public class PostgreSqlCombProvider(
+		ICombDateTimeStrategy dateTimeStrategy,
+		TimestampProvider? customTimestampProvider = null,
+		GuidProvider? customGuidProvider = null
+	) : BaseCombProvider(dateTimeStrategy, customTimestampProvider, customGuidProvider) {
 
 		public override Guid Create(Guid value, DateTime timestamp) {
 			Span<byte> gbytes = stackalloc byte[16];
 			value.TryWriteBytes(gbytes);
-			_dateTimeStrategy.WriteDateTime(gbytes, timestamp);
+			DateTimeStrategy.WriteDateTime(gbytes, timestamp);
 			SwapByteOrderForStringOrder(gbytes);
 			return new Guid(gbytes);
 		}
@@ -33,7 +35,7 @@ namespace RT.Comb {
 			Span<byte> gbytes = stackalloc byte[16];
 			comb.TryWriteBytes(gbytes);
 			SwapByteOrderForStringOrder(gbytes);
-			return _dateTimeStrategy.ReadDateTime(gbytes);
+			return DateTimeStrategy.ReadDateTime(gbytes);
 		}
 
 		// IDateTimeStrategy is required to provide the bytes we need in network byte order, and that's what we want
@@ -41,9 +43,9 @@ namespace RT.Comb {
 		// order, so we need to reverse one or both of those so the bytes we want are re-reversed to the correct 
 		// order by Npgsql's GUID data type handler.
 		private void SwapByteOrderForStringOrder(Span<byte> input) {
-			input[..4].Reverse();            // Swap around the first 4 bytes
+			input[..4].Reverse();           // Swap around the first 4 bytes
 			if (input.Length == 4) return;
-			input.Slice(4, 2).Reverse();            // Swap around the next 2 bytes
+			input.Slice(4, 2).Reverse();    // Swap around the next 2 bytes
 		}
 
 	}

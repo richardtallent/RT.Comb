@@ -6,10 +6,9 @@ namespace RT.CombTests {
 
 	public class MainTests {
 
-		private readonly static UtcNoRepeatTimestampProvider NoDupeProvider = new();
-
-		private readonly ICombProvider SqlNoRepeatCombs = new SqlCombProvider(new SqlDateTimeStrategy(), customTimestampProvider: NoDupeProvider.GetTimestamp);
-		private readonly UnixDateTimeStrategy UnixStrategy = new();
+		private readonly static UtcNoRepeatTimestampProvider _noDupeProvider = new();
+		private readonly ICombProvider _sqlNoRepeatCombs = new SqlCombProvider(new SqlDateTimeStrategy(), customTimestampProvider: _noDupeProvider.GetTimestamp);
+		private readonly UnixDateTimeStrategy _unixStrategy = new();
 
 		/// <summary>
 		/// Ensure that the date provided to be injected into a GUID is the same date we get back from it.
@@ -27,14 +26,14 @@ namespace RT.CombTests {
 
 		[Fact]
 		public void TestDateTimeToMs() {
-			var d = UnixStrategy.MinDateTimeValue.AddMilliseconds(1);
-			var ms = UnixStrategy.ToUnixTimeMilliseconds(d);
+			var d = _unixStrategy.MinDateTimeValue.AddMilliseconds(1);
+			var ms = _unixStrategy.ToUnixTimeMilliseconds(d);
 			Assert.Equal<long>(1, ms);
 		}
 
 		[Fact]
 		public void TestFromUnitMs() =>
-			Assert.Equal(UnixStrategy.MinDateTimeValue.AddMilliseconds(1), UnixStrategy.FromUnixTimeMilliseconds(1));
+			Assert.Equal(_unixStrategy.MinDateTimeValue.AddMilliseconds(1), _unixStrategy.FromUnixTimeMilliseconds(1));
 
 		/// <summary>
 		/// Ensure that the date provided to be injected into a GUID is the same date we get back from it.
@@ -118,12 +117,12 @@ namespace RT.CombTests {
 		/// </summary>
 		[Fact]
 		public void TestUtcNoRepeatTimestampProvider() {
-			var g1 = SqlNoRepeatCombs.Create();
-			var dt1 = SqlNoRepeatCombs.GetTimestamp(g1);
+			var g1 = _sqlNoRepeatCombs.Create();
+			var dt1 = _sqlNoRepeatCombs.GetTimestamp(g1);
 			var inSequenceCount = 0;
 			for (var i = 0; i < 1000; i++) {
-				var g2 = SqlNoRepeatCombs.Create();
-				var dt2 = SqlNoRepeatCombs.GetTimestamp(g2);
+				var g2 = _sqlNoRepeatCombs.Create();
+				var dt2 = _sqlNoRepeatCombs.GetTimestamp(g2);
 				if (dt2 > dt1) {
 					inSequenceCount++;
 				} else {

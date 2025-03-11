@@ -4,6 +4,7 @@ using System;
 using Xunit;
 
 namespace RT.Comb.AspNetCore.Tests {
+
 	public sealed class SqlCombProviderServiceCollectionExtensionsTests {
 
 		[Fact]
@@ -15,13 +16,9 @@ namespace RT.Comb.AspNetCore.Tests {
 			services.AddSqlCombGuidWithSqlDateTime();
 
 			// Assert
-			var serviceProvider = services.BuildServiceProvider();
-			var comb = serviceProvider.GetService<ICombProvider>();
-
-			var sqlCombProvider = comb as SqlCombProvider;
-
-			Assert.NotNull(sqlCombProvider);
-			Assert.IsType<SqlDateTimeStrategy>(TestUtils.GetCurrentDateTimeStrategy(sqlCombProvider));
+			var p = services.BuildServiceProvider().GetService<ICombProvider>();
+			Assert.NotNull(p);
+			Assert.IsType<SqlDateTimeStrategy>(TestUtils.GetCurrentDateTimeStrategy(p));
 		}
 
 		[Fact]
@@ -57,13 +54,9 @@ namespace RT.Comb.AspNetCore.Tests {
 			services.AddSqlCombGuidWithUnixDateTime();
 
 			// Assert
-			var serviceProvider = services.BuildServiceProvider();
-			var comb = serviceProvider.GetService<ICombProvider>();
-
-			var sqlCombProvider = comb as SqlCombProvider;
-
-			Assert.NotNull(sqlCombProvider);
-			Assert.IsType<UnixDateTimeStrategy>(TestUtils.GetCurrentDateTimeStrategy(sqlCombProvider));
+			var p = services.BuildServiceProvider().GetService<ICombProvider>();
+			Assert.NotNull(p);
+			Assert.IsType<UnixDateTimeStrategy>(TestUtils.GetCurrentDateTimeStrategy(p));
 		}
 
 		[Fact]
@@ -79,8 +72,7 @@ namespace RT.Comb.AspNetCore.Tests {
 			customGuidProviderMock.Setup(p => p.Invoke()).Returns(Guid.NewGuid());
 
 			services.AddSqlCombGuidWithUnixDateTime(customTimestampProviderMock.Object, customGuidProviderMock.Object);
-			var serviceProvider = services.BuildServiceProvider();
-			var comb = serviceProvider.GetService<ICombProvider>();
+			var comb = services.BuildServiceProvider().GetService<ICombProvider>();
 
 			// Act
 			var _ = comb.Create();

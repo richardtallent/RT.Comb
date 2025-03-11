@@ -10,14 +10,14 @@ using BenchmarkDotNet.Reports;
 namespace RT.Comb.Benchmark {
 
 	internal class BenchmarkConfig : ManualConfig {
-		private readonly IConfig defaultConfig = DefaultConfig.Instance;
+		private readonly IConfig _defaultConfig = DefaultConfig.Instance;
 
 		public BenchmarkConfig() {
 			AddColumnProvider(DefaultColumnProviders.Instance)
 				.AddExporter(AsciiDocExporter.Default)
 				.AddLogger(ConsoleLogger.Default)
-				.AddAnalyser(defaultConfig.GetAnalysers().ToArray())
-				.AddValidator(defaultConfig.GetValidators().ToArray())
+				.AddAnalyser(_defaultConfig.GetAnalysers().ToArray())
+				.AddValidator(_defaultConfig.GetValidators().ToArray())
 				.WithSummaryStyle(SummaryStyle.Default)
 				.WithArtifactsPath(GetArtifactsPath())
 				.WithOption(ConfigOptions.DisableLogFile, true)
@@ -25,13 +25,11 @@ namespace RT.Comb.Benchmark {
 
 			var baseJob = Job.Default;
 			AddJob(
-				baseJob.WithNuGet("RT.Comb", "3.0.0").WithId("2.0.0"),
-				baseJob.WithNuGet("RT.Comb", "4.0.0").WithId("4.0.0"));
+				// baseJob.WithNuGet("RT.Comb", "3.0.0").WithId("3.0.0"),
+				baseJob.WithNuGet("RT.Comb", "4.0.2").WithId("4.0.2"));
 		}
 
-		private static string GetArtifactsPath() {
-			return Path.Combine(RuntimeContext.RootDirectory, "docs", "benchmarks");
-		}
+		private static string GetArtifactsPath() => Path.Combine(RuntimeContext.RootDirectory, "docs", "benchmarks");
 	}
 
 }

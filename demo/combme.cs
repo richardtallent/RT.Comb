@@ -1,7 +1,7 @@
 ﻿using System;
 using RT.Comb;
 /*
-	Copyright 2015-2023 Richard S. Tallent, II
+	Copyright 2015-2025 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -16,14 +16,12 @@ using RT.Comb;
 	CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-/*
-******************************************************************************
-This is an example console application, showing a minimal-code use of the full
-COMB provider API. Run it with no arguments and it will generate a COMB GUID
-for you. Pass it a COMB GUID and it will return the timestamp. Keep in mind
-that the default timestamp provider uses UST.
-******************************************************************************
- */
+// ******************************************************************************
+// This is an example console application, showing a minimal-code use of the full
+// COMB provider API. Run it with no arguments and it will generate a COMB GUID
+// for you. Pass it a COMB GUID and it will return the timestamp. Keep in mind
+// that the default timestamp provider uses UST.
+// ******************************************************************************
 
 enum ExitCode : int {
 	Success = 0,

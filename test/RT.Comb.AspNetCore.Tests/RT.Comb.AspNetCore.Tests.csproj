@@ -2,17 +2,19 @@
 
 	<PropertyGroup>
 		<AssemblyTitle>RT.Comb.AspNetCore.Tests</AssemblyTitle>
-		<TargetFramework>net7.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
+		<AssemblyName>RT.Comb.AspNetCore.Tests</AssemblyName>
+		<PackageId>RT.Comb.AspNetCore.Tests</PackageId>
 		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
-		<PackageReference Include="xunit" Version="2.5.3" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
-		<PackageReference Include="Moq" Version="4.20.69" />
-		<PackageReference Include="coverlet.collector" Version="6.0.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" />
+		<PackageReference Include="xunit" Version="2.9.3" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+		<PackageReference Include="Moq" Version="4.20.72" />
+		<PackageReference Include="coverlet.collector" Version="6.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>

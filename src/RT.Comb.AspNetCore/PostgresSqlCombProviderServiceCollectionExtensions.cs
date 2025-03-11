@@ -23,10 +23,8 @@ namespace RT.Comb.AspNetCore {
 			this IServiceCollection services,
 			TimestampProvider? customTimestampProvider = null,
 			GuidProvider? customGuidProvider = null
-		) {
-			services.TryAddSingleton<ICombProvider>(
+		) => services.TryAddSingleton<ICombProvider>(
 				AddPostgreSqlCombGuid(new SqlDateTimeStrategy(), customTimestampProvider, customGuidProvider));
-		}
 
 		/// <summary>
 		/// Registers a <see cref="PostgreSqlCombProvider"/> in the <see cref="IServiceCollection"/> 
@@ -43,18 +41,14 @@ namespace RT.Comb.AspNetCore {
 			this IServiceCollection services,
 			TimestampProvider? customTimestampProvider = null,
 			GuidProvider? customGuidProvider = null
-		) {
-			services.TryAddSingleton<ICombProvider>(
+		) => services.TryAddSingleton<ICombProvider>(
 				AddPostgreSqlCombGuid(new UnixDateTimeStrategy(), customTimestampProvider, customGuidProvider));
-		}
 
 		private static PostgreSqlCombProvider AddPostgreSqlCombGuid(
 			ICombDateTimeStrategy dateTimeStrategy,
 			TimestampProvider? customTimestampProvider,
 			GuidProvider? customGuidProvider
-		) {
-			return new PostgreSqlCombProvider(dateTimeStrategy, customTimestampProvider, customGuidProvider);
-		}
+		) => new(dateTimeStrategy, customTimestampProvider, customGuidProvider);
 
 	}
 

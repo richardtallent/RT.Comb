@@ -156,6 +156,10 @@ Recall that `System.Guid` stores its bytes for `Data1` and `Data2` in a differen
 
 **This is a breaking change for RT.Comb v.1.4.** In prior versions, I wasn't actually able to test on PostgreSQL and got this all wrong, along with misplacing where the version nybble was and doing unnecessary bit-gymnastics to avoid overwriting it. My error was kindly pointed out by Barry Hagan and has been fixed.
 
+### BinaryCombProvider
+
+Use this version for Oracle or for binary SqlLite columns. This places the timestamp at the binary beginning of the COMB.
+
 ### Comparing COMB to UUIDv7
 
 Here is more information on UUIDv7: https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-04.html#v7
@@ -235,8 +239,11 @@ Some missing pieces:
 - 3.0.0 2021-10-27 Zero-alloc and nullable support (thanks @skarllot!); Switch to production build.
 - 4.0.0 2022-12-11 Drop .NET 5 and .NET Framework support. Please continue to use v3.0 if you are still supporting these. Minor updates to bump versions and take advantage of newer C# features.
 - 4.0.1 2023-02-11 Move back to .NET 6 version of DI for now for better compatibility. (#26)
-- (Unreleased) 2023-10-28: Drop .NET 6, bump the dependencies.
-- (Unreleased) 2024-03-20: Move SQL code to separate files (thanks for the idea, @Reikooters! #29)
+- 4.0.2 2025-03-11
+  - Drop .NET 6, bump the dependencies.
+  - Move SQL code to separate files (thanks for the idea, @Reikooters! #29)
+  - Add Binary variant for Oracle and SqlLite (#23, thanks @fubar-coder!)
+  - Move all ancilliary projects to .NET 9
 
 ## More Information
 
@@ -248,7 +255,7 @@ http://www.siepman.nl/blog/post/2013/10/28/ID-Sequential-Guid-COMB-Vs-Int-Identi
 
 ## License (MIT "Expat")
 
-Copyright 2015-2024 Richard S. Tallent, II
+Copyright 2015-2025 Richard S. Tallent, II
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

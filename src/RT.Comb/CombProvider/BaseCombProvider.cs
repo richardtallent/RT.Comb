@@ -1,6 +1,6 @@
 ﻿using System;
 /*
-	Copyright 2015-2023 Richard S. Tallent, II
+	Copyright 2015-2025 Richard S. Tallent, II
 
 	Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
 	(the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge,
@@ -27,7 +27,7 @@ namespace RT.Comb {
 	// Note that either implementation can be paired with either CombDateTimeStrategy.
 	public abstract class BaseCombProvider : ICombProvider {
 
-		protected ICombDateTimeStrategy _dateTimeStrategy;
+		protected ICombDateTimeStrategy DateTimeStrategy;
 		private readonly TimestampProvider? _timestampProvider;
 		private readonly GuidProvider? _guidProvider;
 
@@ -35,7 +35,7 @@ namespace RT.Comb {
 			if (dateTimeStrategy.NumDateBytes != 4 && dateTimeStrategy.NumDateBytes != 6) {
 				throw new NotSupportedException("ICombDateTimeStrategy is limited to either 4 or 6 bytes.");
 			}
-			_dateTimeStrategy = dateTimeStrategy;
+			DateTimeStrategy = dateTimeStrategy;
 			_timestampProvider = customTimestampProvider;
 			_guidProvider = customGuidProvider;
 		}

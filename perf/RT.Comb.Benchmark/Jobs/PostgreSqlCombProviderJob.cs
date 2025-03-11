@@ -6,29 +6,21 @@ namespace RT.Comb.Benchmark.Jobs {
 	[AsciiDocExporter]
 	[MemoryDiagnoser]
 	public class PostgreSqlCombProviderJob {
-		private readonly PostgreSqlCombProvider provider = new(new UnixDateTimeStrategy());
-		private readonly DateTime baseDateTime = DateTime.UtcNow;
-		private readonly Guid baseGuid = Guid.NewGuid();
+		private readonly PostgreSqlCombProvider _provider = new(new UnixDateTimeStrategy());
+		private readonly DateTime _baseDateTime = DateTime.UtcNow;
+		private readonly Guid _baseGuid = Guid.NewGuid();
 
 		[Benchmark]
-		public Guid CreateNew() {
-			return provider.Create();
-		}
+		public Guid CreateNew() => _provider.Create();
 
 		[Benchmark]
-		public Guid CreateBasedOnDateTime() {
-			return provider.Create(baseDateTime);
-		}
+		public Guid CreateBasedOnDateTime() => _provider.Create(_baseDateTime);
 
 		[Benchmark]
-		public Guid CreateBasedOnGuid() {
-			return provider.Create(baseGuid);
-		}
+		public Guid CreateBasedOnGuid() => _provider.Create(_baseGuid);
 
 		[Benchmark]
-		public Guid CreateBasedOnGuidAndDateTime() {
-			return provider.Create(baseGuid, baseDateTime);
-		}
+		public Guid CreateBasedOnGuidAndDateTime() => _provider.Create(_baseGuid, _baseDateTime);
 	}
 
 }
