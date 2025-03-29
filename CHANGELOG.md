@@ -24,3 +24,4 @@ Migrated from README to CHANGELOG on 2025-03-29
   - Move SQL code to separate files (thanks for the idea, @Reikooters! #29)
   - Add Binary variant for Oracle and SqlLite (#23, thanks @fubar-coder!)
   - Move all ancilliary projects to .NET 9
+- 4.0.3 2025-03-29 Built with `dotnet build -c Release`, will do that in the future as well. (#31)
