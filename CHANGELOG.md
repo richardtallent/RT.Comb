@@ -1,4 +1,4 @@
-## CHANGE LOG
+# CHANGE LOG
 
 Migrated from README to CHANGELOG on 2025-03-29
 
