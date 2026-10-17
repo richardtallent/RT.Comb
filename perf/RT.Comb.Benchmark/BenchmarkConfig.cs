@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Linq;
 using BenchmarkDotNet.Columns;
@@ -23,10 +24,16 @@ namespace RT.Comb.Benchmark {
 				.WithOption(ConfigOptions.DisableLogFile, true)
 				.WithOption(ConfigOptions.DisableOptimizationsValidator, true);
 
-			var baseJob = Job.Default;
-			AddJob(
-				// baseJob.WithNuGet("RT.Comb", "3.0.0").WithId("3.0.0"),
-				baseJob.WithNuGet("RT.Comb", "4.0.2").WithId("4.0.2"));
+			// ShortRun keeps this to a minute or two; the operations are tiny and stable.
+			var baseJob = Job.ShortRun;
+			AddJob(baseJob.WithId("local"));
+
+			// Optionally also run against a published package, e.g. RTCOMB_BASELINE=4.0.2. Exclude newer types
+			// (Uuid7ComparisonJob) from such runs with a filter such as --filter "*CombProviderJob*".
+			var baseline = Environment.GetEnvironmentVariable("RTCOMB_BASELINE");
+			if (!string.IsNullOrWhiteSpace(baseline)) {
+				AddJob(baseJob.WithMsBuildArguments($"/p:RTCombVersion={baseline}").WithId(baseline));
+			}
 		}
 
 		private static string GetArtifactsPath() => Path.Combine(RuntimeContext.RootDirectory, "docs", "benchmarks");

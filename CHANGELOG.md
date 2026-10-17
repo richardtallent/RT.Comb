@@ -25,3 +25,8 @@ Migrated from README to CHANGELOG on 2025-03-29
   - Add Binary variant for Oracle and SqlLite (#23, thanks @fubar-coder!)
   - Move all ancilliary projects to .NET 9
 - 4.0.3 2025-03-29 Built with `dotnet build -c Release`, will do that in the future as well. (#31)
+- 4.1.0 2026-10-17
+  - Add `Uuid7CombProvider` / `Provider.Uuid7`, which produces valid RFC 9562 UUIDv7 values (#22). It is on par or faster than `Guid.CreateVersion7`
+  - Fix `UnixDateTimeStrategy.MaxDateTimeValue`, which used XOR instead of a power and returned a wrong date.
+  - Ancillary projects (demo, tests, benchmarks) moved to .NET 10; test projects moved to xunit v3 on Microsoft Testing Platform (`dotnet test --solution RT.Comb.sln`). Dependencies bumped.
+  - Minor performance boost for UnixDateTimeStrategy (and thus any provider using it).

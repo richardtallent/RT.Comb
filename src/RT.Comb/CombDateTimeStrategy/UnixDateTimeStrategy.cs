@@ -20,7 +20,7 @@ namespace RT.Comb {
 
 	/// <summary>
 	/// This strategy stores the Unix epoch timestamp, scaled to milliseconds, in 48 unsigned bits.
-	/// The allowed date range is 1970-01-01 to 8419-05-26.
+	/// 48 bits of milliseconds would reach the year 10889, so the effective upper bound is <see cref="DateTime.MaxValue"/>.
 	/// </summary>
 	public class UnixDateTimeStrategy : ICombDateTimeStrategy {
 
@@ -31,7 +31,7 @@ namespace RT.Comb {
 
 		public DateTime MinDateTimeValue { get; } = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 
-		public DateTime MaxDateTimeValue => MinDateTimeValue.AddMilliseconds(2 ^ (8 * NumDateBytes));
+		public DateTime MaxDateTimeValue => DateTime.MaxValue;
 
 		public void WriteDateTime(Span<byte> destination, DateTime timestamp) {
 			var ms = ToUnixTimeMilliseconds(timestamp);
@@ -49,9 +49,9 @@ namespace RT.Comb {
 			return FromUnixTimeMilliseconds(ms);
 		}
 
-		public long ToUnixTimeMilliseconds(DateTime timestamp) => (long)(timestamp.ToUniversalTime() - MinDateTimeValue).TotalMilliseconds;
+		public long ToUnixTimeMilliseconds(DateTime timestamp) => (timestamp.ToUniversalTime().Ticks - MinDateTimeValue.Ticks) / TimeSpan.TicksPerMillisecond;
 
-		public DateTime FromUnixTimeMilliseconds(long ms) => MinDateTimeValue.AddMilliseconds(ms);
+		public DateTime FromUnixTimeMilliseconds(long ms) => new(MinDateTimeValue.Ticks + ms * TimeSpan.TicksPerMillisecond, DateTimeKind.Utc);
 
 	}
 

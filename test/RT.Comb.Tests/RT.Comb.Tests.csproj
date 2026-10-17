@@ -2,7 +2,8 @@
 
 	<PropertyGroup>
 		<AssemblyTitle>RT.Comb.Tests</AssemblyTitle>
-		<TargetFramework>net9.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
+		<OutputType>Exe</OutputType>
 		<AssemblyName>RT.Comb.Tests</AssemblyName>
 		<PackageId>RT.Comb.Tests</PackageId>
 		<GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
@@ -13,10 +14,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
-		<PackageReference Include="xunit.runner.visualstudio" Version="3.0.2" />
-		<PackageReference Include="xunit" Version="2.9.3" />
-		<PackageReference Include="System.Data.SqlClient" Version="4.9.0" />
+		<PackageReference Include="xunit.v3" Version="4.0.2" />
+		<PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
 	</ItemGroup>
 
 </Project>

@@ -1,3 +1,6 @@
 {
-     "projects":[ "src", "test", "perf" ]
+     "projects":[ "src", "test", "perf" ],
+     "test": {
+          "runner": "Microsoft.Testing.Platform"
+     }
 }

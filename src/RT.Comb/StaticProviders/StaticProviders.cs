@@ -20,6 +20,7 @@ namespace RT.Comb {
 		public static readonly ICombProvider Legacy = new SqlCombProvider(new SqlDateTimeStrategy());
 		public static readonly ICombProvider Sql = new SqlCombProvider(new UnixDateTimeStrategy());
 		public static readonly ICombProvider PostgreSql = new PostgreSqlCombProvider(new UnixDateTimeStrategy());
+		public static readonly ICombProvider Uuid7 = new Uuid7CombProvider();
 		public static readonly ICombProvider Oracle = new BinaryCombProvider(new UnixDateTimeStrategy());
 		public static readonly ICombProvider SqliteBinary = new BinaryCombProvider(new UnixDateTimeStrategy());
 	}

@@ -160,13 +160,21 @@ Recall that `System.Guid` stores its bytes for `Data1` and `Data2` in a differen
 
 Use this version for Oracle or for binary SqlLite columns. This places the timestamp at the binary beginning of the COMB.
 
+### Uuid7CombProvider
+
+Produces true [RFC 9562](https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7) UUIDv7 values: the 48-bit Unix-millisecond timestamp first, version nibble `7`, RFC variant bits, and random data elsewhere. Use `Provider.Uuid7` for any platform that sorts UUIDs in network byte order, such as PostgreSQL or MySQL `BINARY(16)` (store `guid.ToByteArray(bigEndian: true)`; no `UUID_TO_BIN` swap flag is needed).
+
+```text
+MMMMMMMM MMMM 7xxx Vxxx xxxxxxxxxxxx  UnixDateTimeStrategy, milliseconds
+```
+
 ### Comparing COMB to UUIDv7
 
-Here is more information on UUIDv7: https://www.ietf.org/archive/id/draft-peabody-dispatch-new-uuid-format-04.html#v7
+`PostgreSqlCombProvider` with the default `UnixDateTimeStrategy` uses the same timestamp layout and sort order as UUIDv7, but it leaves the version nibble as `4` (from `Guid.NewGuid()`), so the values are not valid UUIDv7. Use `Uuid7CombProvider` if you need valid v7 values; use `PostgreSqlCombProvider` if you want to stay compatible with COMBs you've already generated.
 
-`PostgreSqlCombProvider` with the default `UnixDateTimeStrategy` (above) is compatible with UUIDv7.
+`SqlCombProvider` with the default `UnixDateTimeStrategy` also uses a 48-bit UNIX timestamp, but the location of the timestamp bytes is different, based on how SQL Server sorts `UNIQUEIDENTIFIER` values.
 
-However, while `SqlCombProvider` with the default `UnixDateTimeStrategy` also uses a 48-bit UNIX timestamp, the location of the timestamp bytes is different, based on how SQL Server sorts `UNIQUEIDENTIFIER` values.
+Unlike some UUIDv7 implementations, there is no monotonic counter, so values created within the same millisecond are ordered randomly (see `UtcNoRepeatTimestampProvider` if you need strict ordering).
 
 ### Note about entropy
 
@@ -205,6 +213,20 @@ Some missing pieces:
 - Please keep all contributions compatible with .NET Core.
 - Please use the same style (tabs, same-line opening braces, compact line spacing, etc.)
 - Please keep project/solution files compatible with Visual Studio Code.
+
+### Building and testing
+
+The test projects use xunit v3 on the Microsoft Testing Platform (opted in via `global.json`, which is required on the .NET 10 SDK). Run the tests with:
+
+```sh
+dotnet test --solution RT.Comb.sln
+```
+
+Plain `dotnet test RT.Comb.sln` uses the old VSTest path and will fail. Test projects are executables (`OutputType` of `Exe`), and they don't need `Microsoft.NET.Test.Sdk` or `xunit.runner.visualstudio`.
+
+### Benchmarks
+
+Run `dotnet run -c Release --project perf/RT.Comb.Benchmark -- --filter "*"` (the switcher takes standard BenchmarkDotNet arguments). Benchmarks run against the local source by default. To also compare against a published package, set `RTCOMB_BASELINE=x.y.z` (for example `RTCOMB_BASELINE=4.0.2 dotnet run -c Release --project perf/RT.Comb.Benchmark -- --filter "*CombProviderJob*"`). That passes `/p:RTCombVersion=x.y.z` to the build, which makes the project reference the `RT.Comb` package instead of the local project, so use a filter that excludes types newer than that package (such as `Uuid7ComparisonJob`). Use `--filter "*Uuid7*"` to run just the UUIDv7 comparison against `Guid.CreateVersion7()`.
 
 ## Security and Performance
 

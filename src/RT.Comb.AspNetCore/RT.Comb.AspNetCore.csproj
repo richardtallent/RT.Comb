@@ -4,7 +4,7 @@
 		<Description>ASP.NET Extensions to make it easy to create and use COMB (timestamped sequential) GUID variants for Microsoft SQL Server and PostgreSQL. See the GitHub site for more details.</Description>
 		<Copyright>Copyright 2015-2025 Richard S. Tallent</Copyright>
 		<AssemblyTitle>RT.Comb</AssemblyTitle>
-		<VersionPrefix>4.0.3</VersionPrefix>
+		<VersionPrefix>4.1.0</VersionPrefix>
 		<Authors>Richard Tallent</Authors>
 		<PlatformTarget>anycpu</PlatformTarget>
 		<AssemblyName>RT.Comb.AspNetCore</AssemblyName>

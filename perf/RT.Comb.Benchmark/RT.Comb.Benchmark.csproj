@@ -2,16 +2,26 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net9.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
 	</PropertyGroup>
 
-	<ItemGroup>
+	<!-- Pass /p:RTCombVersion=x.y.z (see BenchmarkConfig) to benchmark a published NuGet version instead of the local source. -->
+	<ItemGroup Condition=" '$(RTCombVersion)' == '' ">
 		<ProjectReference Include="../../src/RT.Comb/RT.Comb.csproj" />
 	</ItemGroup>
 
+	<ItemGroup Condition=" '$(RTCombVersion)' != '' ">
+		<PackageReference Include="RT.Comb" Version="$(RTCombVersion)" />
+	</ItemGroup>
+
+	<!-- Jobs for types newer than the published package are excluded from NuGet-version runs. -->
+	<PropertyGroup Condition=" '$(RTCombVersion)' != '' ">
+		<DefineConstants>$(DefineConstants);RTCOMB_NUGET</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup>
-		<PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
+		<PackageReference Include="BenchmarkDotNet" Version="0.15.8" />
 	</ItemGroup>
 
 </Project>
